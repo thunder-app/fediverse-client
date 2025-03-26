@@ -22,3 +22,5 @@ jobs:
 
       - name: Run lints
         run: dart analyze --no-fatal-warnings
+      
+      # TODO: Set up lemmy server for tests

@@ -1,22 +1,23 @@
 import 'package:lemmy_dart_client/src/client/client.dart';
 import 'package:lemmy_dart_client/src/client/post/post.dart';
 
-/// This defines a series of actions that can be performed on a given post.
-///
 /// The [PostHelper] class is used to interact with posts on a Lemmy instance.
+/// This class should only implement methods that are not specific to a single post.
+///
+/// To interact with a specific post, use the [Post] class.
 ///
 /// Example:
 /// ```dart
 /// final client = await LemmyClient.initialize();
 ///
-/// // Fetch a post with a given ID, and interact with it.
-/// final post = client.post(id: 1).refresh();
-/// post.vote(); // Upvotes the post - when called on an already upvoted post, it will remove the upvote
-/// post.save(); // Saves the post - when called on an already saved post, it will unsave the post
-///
-/// // You can create a new post by calling the create method. This returns a post that you can interact with.
-/// final newPost = client.post.create();
-/// newPost.vote();
+/// // Create a new post.
+/// final post = client.post.create({
+///   communityId: 1,
+///   title: 'Post Title',
+///   body: 'This is the body of my new post',
+///   url: 'https://example.com',
+///   nsfw: false,
+/// });
 /// ```
 class PostHelper {
   final LemmyClient _client;

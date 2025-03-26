@@ -7,15 +7,15 @@ import '../config.dart';
 void main() {
   late LemmyClient client;
 
-  setUpAll(() async {
-    client = await LemmyClient.initialize(
-      instance: instance,
-      version: version,
-      scheme: 'https',
-    );
-  });
-
   group('Account Auth', () {
+    setUp(() async {
+      client = await LemmyClient.initialize(
+        instance: instance,
+        version: version,
+        scheme: scheme,
+      );
+    });
+
     test('should properly login given username and password', () async {
       final result = await client.account.login(username: username, password: password);
 
@@ -28,7 +28,7 @@ void main() {
       final results = await client.account.logins();
 
       expect(results, isNotNull);
-      expect(results.length, isNonZero);
+      expect(results.length, isNonZero); // Should not be zero as we just logged in
       expect(results.length, isPositive);
     });
 
@@ -42,13 +42,14 @@ void main() {
   });
 
   group('Account Posts & Comments', () {
-    setUpAll(() async {
+    setUp(() async {
       client = await LemmyClient.initialize(
-        auth: auth,
         instance: instance,
         version: version,
-        scheme: 'https',
+        scheme: scheme,
       );
+
+      await client.account.login(username: username, password: password);
     });
 
     test('should properly fetch the current user posts', () async {

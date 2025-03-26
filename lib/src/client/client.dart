@@ -25,7 +25,7 @@ class LemmyClient {
 
   /// The URL of the Lemmy instance, excluding the scheme.
   /// For example, 'lemmy.world' or 'lemmy.ml'.
-  final String host;
+  late String host;
 
   /// The version of the Lemmy API to use. Defaults to 'v4'.
   /// Available versions are 'v3' and 'v4'.
@@ -34,6 +34,10 @@ class LemmyClient {
   /// The scheme to use when interacting with the Lemmy instance. Defaults to 'https'.
   /// Should be one of 'http' or 'https'.
   final String scheme;
+
+  /// The port to use when interacting with the Lemmy instance.
+  /// Should only be used during development.
+  late int? port;
 
   /// The authentication token for the current client instance.
   /// This is used to authenticate requests to the Lemmy instance as a given user.
@@ -65,6 +69,16 @@ class LemmyClient {
     required this.version,
     this.auth,
   }) {
+    // Set the port if the host string contains a port.
+    final parts = host.split(':');
+
+    if (scheme == 'http' && parts.length == 2) {
+      host = parts[0];
+      port = int.parse(parts[1]);
+    } else {
+      port = null;
+    }
+
     site = SiteHelper(this);
     account = AccountHelper(this);
     feed = FeedHelper(this);
@@ -119,6 +133,7 @@ class LemmyClient {
       Uri(
         scheme: scheme,
         host: host,
+        port: port,
         path: 'api/$version$path',
         queryParameters: queryParameters,
       ),
@@ -133,7 +148,7 @@ class LemmyClient {
     body?.removeWhere((key, value) => value == null);
 
     final response = await httpClient.post(
-      Uri(scheme: scheme, host: host, path: 'api/$version$path'),
+      Uri(scheme: scheme, host: host, port: port, path: 'api/$version$path'),
       headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $auth'},
       body: jsonEncode(body),
     );
