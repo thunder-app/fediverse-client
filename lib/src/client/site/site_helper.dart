@@ -17,7 +17,7 @@ class SiteHelper {
   /// When successful, the client's site information is also updated.
   Future<Map<String, dynamic>> refresh() async {
     final v4Endpoint = '/site';
-    final result = await _client.get(path: getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version));
+    final result = await _client.sendGetRequest(path: getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version));
 
     info = result;
     return result;

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:lemmy_dart_client/src/client/account/account_helper.dart';
 import 'package:lemmy_dart_client/src/client/community/community_helper.dart';
 import 'package:lemmy_dart_client/src/client/feed/feed_helper.dart';
+import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
 import 'package:lemmy_dart_client/src/client/site/site_helper.dart';
 import 'package:lemmy_dart_client/src/client/user/user_helper.dart';
 
@@ -52,6 +53,9 @@ class LemmyClient {
   /// Interface to work with [CommunityHelper] instances.
   late final CommunityHelper community;
 
+  /// Interface to work with the [PostHelper] instances.
+  late final PostHelper post;
+
   /// Interface to work with [FeedHelper] instances.
   late final FeedHelper feed;
 
@@ -64,6 +68,7 @@ class LemmyClient {
     site = SiteHelper(this);
     account = AccountHelper(this);
     feed = FeedHelper(this);
+    post = PostHelper(this);
     // user = UserHelper(this);
     // community = CommunityHelper(this);
   }
@@ -97,7 +102,7 @@ class LemmyClient {
   }
 
   /// Helper method to perform GET requests.
-  Future<Map<String, dynamic>> get({String? path, Map<String, dynamic>? body}) async {
+  Future<Map<String, dynamic>> sendGetRequest({String? path, Map<String, dynamic>? body}) async {
     body?.removeWhere((key, value) => value == null);
 
     Map<String, String>? queryParameters;
@@ -124,7 +129,7 @@ class LemmyClient {
   }
 
   /// Helper method to perform POST requests.
-  Future<Map<String, dynamic>> post({String? path, Map<String, dynamic>? body}) async {
+  Future<Map<String, dynamic>> sendPostRequest({String? path, Map<String, dynamic>? body}) async {
     body?.removeWhere((key, value) => value == null);
 
     final response = await httpClient.post(

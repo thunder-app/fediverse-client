@@ -47,7 +47,7 @@ class Feed {
     final v4Endpoint = '/post/list';
     final path = getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version);
 
-    final result = await _client.get(
+    final result = await _client.sendGetRequest(
       path: path,
       body: {
         'type_': _getType(),

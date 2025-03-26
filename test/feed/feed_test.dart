@@ -18,24 +18,40 @@ void main() {
   group('Feed', () {
     test('should properly fetch feed listings from all', () async {
       final result = await client.feed(type: 'all').posts();
+
+      expect(result.containsKey('posts'), isTrue);
+      expect(result.containsKey('next_page'), isTrue);
       expect(result, isNotNull);
     });
 
     test('should properly fetch feed listings from local', () async {
       final result = await client.feed(type: 'local').posts();
+
+      expect(result.containsKey('posts'), isTrue);
+      expect(result.containsKey('next_page'), isTrue);
       expect(result, isNotNull);
     });
 
     test('should properly fetch next page of feed', () async {
       final feed = client.feed(type: 'local');
 
-      Map<String, dynamic> result = await feed.posts();
-      expect(result, isNotNull);
+      final page1 = await feed.posts();
+      expect(page1.containsKey('posts'), isTrue);
+      expect(page1.containsKey('next_page'), isTrue);
+      expect(page1, isNotNull);
 
-      final cursor = result['next_page'];
-      result = await feed.posts(cursor: result['next_page']);
+      final cursor = page1['next_page'];
+      final page2 = await feed.posts(cursor: page1['next_page']);
+      expect(page2, isNotNull);
+      expect(cursor, isNot(page2['next_page']));
+    });
+
+    test('should properly fetch feed listings with a given sort type', () async {
+      final result = await client.feed(type: 'local').posts(sort: 'old');
+
+      expect(result.containsKey('posts'), isTrue);
+      expect(result.containsKey('next_page'), isTrue);
       expect(result, isNotNull);
-      expect(cursor, isNot(result['next_page']));
     });
 
     test('should properly throw error when fetching feed listings from subscriptions without being logged in', () async {

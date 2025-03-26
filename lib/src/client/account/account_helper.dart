@@ -75,7 +75,7 @@ class AccountHelper {
     }
 
     if (_client.version == 'v4') {
-      final result = await _client.get(path: '/account');
+      final result = await _client.sendGetRequest(path: '/account');
       info = result;
       return info;
     }
@@ -105,7 +105,7 @@ class AccountHelper {
     final v4Endpoint = '/account/auth/login';
     final path = getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version);
 
-    final result = await _client.post(
+    final result = await _client.sendPostRequest(
       path: path,
       body: {
         'username_or_email': username,
@@ -134,7 +134,7 @@ class AccountHelper {
     final v4Endpoint = '/account/list_logins';
     final path = getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version);
 
-    final result = await _client.get(path: path);
+    final result = await _client.sendGetRequest(path: path);
     return result;
   }
 
@@ -151,7 +151,7 @@ class AccountHelper {
     final v4Endpoint = '/account/auth/logout';
     final path = getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version);
 
-    final result = await _client.post(path: path);
+    final result = await _client.sendPostRequest(path: path);
 
     if (result.containsKey('success') && result['success'] == true) {
       _client.auth = null;
@@ -208,7 +208,7 @@ class AccountHelper {
         // In v3, we use the endpoint /user [GetPersonDetails] to get a given user's posts
         final path = '/user';
 
-        final result = await _client.get(
+        final result = await _client.sendGetRequest(
           path: path,
           body: {
             'person_id': id,
@@ -227,7 +227,7 @@ class AccountHelper {
         String path = '/person/content';
         if (saved == true) path = '/account/auth/saved';
 
-        final result = await _client.get(
+        final result = await _client.sendGetRequest(
           path: path,
           body: {
             'type': 'Posts', // We only want posts for this method
@@ -288,7 +288,7 @@ class AccountHelper {
         // In v3, we use the endpoint /user [GetPersonDetails] to get a given user's comments
         final path = '/user';
 
-        final result = await _client.get(
+        final result = await _client.sendGetRequest(
           path: path,
           body: {
             'person_id': id,
@@ -307,7 +307,7 @@ class AccountHelper {
         String path = '/person/content';
         if (saved == true) path = '/account/auth/saved';
 
-        final result = await _client.get(
+        final result = await _client.sendGetRequest(
           path: path,
           body: {
             'type': 'Comments', // We only want comments for this method
