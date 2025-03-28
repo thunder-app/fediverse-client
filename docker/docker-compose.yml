@@ -3,8 +3,15 @@ x-logging: &default-logging
   options:
     max-size: "50m"
     max-file: "4"
-
+  
 services:
+
+  dart:
+    image: dart:3.7.2
+    volumes:
+      - ..:/workspaces/${localWorkspaceFolderBasename}
+    depends_on:
+      - lemmy
   proxy:
     image: nginx:1-alpine
     ports:
@@ -104,9 +111,8 @@ services:
         "-c",
         "track_activity_query_size=1048576",
       ]
-    ports:
-      # use a different port so it doesn't conflict with potential postgres db running on the host
-      - "5433:5432"
+    expose:
+      - "5432"
     environment:
       - POSTGRES_USER=lemmy
       - POSTGRES_PASSWORD=password
