@@ -16,6 +16,12 @@ class Community {
 
   Community(this._client, {this.id, this.name});
 
+  /// Initializes a new community with the given information.
+  Community.populate(this._client, {this.id, this.name, this.info});
+
+  /// The community information.
+  Map<String, dynamic>? info;
+
   /// Fetches the details of a community with the given id or name.
   // Future<CommunityResponse> details() async {
   //   final result = await _client.get(

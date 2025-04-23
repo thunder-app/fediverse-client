@@ -1,41 +1,42 @@
-// import 'package:lemmy_dart_client/src/client/client.dart';
-// import 'package:test/test.dart';
+import 'package:test/test.dart';
 
-// void main() {
-//   late LemmyClient client;
+import 'package:lemmy_dart_client/src/client/client.dart';
 
-//   setUpAll(() async {
-//     client = await LemmyClient.initialize();
-//   });
+import '../config.dart';
+import '../utils/utils.dart';
 
-//   group('Community', () {
-//     test('should throw exception when attempting to create a community without being logged in', () async {
-//       final result = await client.community.create(
-//         name: 'test_community',
-//         title: 'Test Community',
-//       );
+void main() {
+  late LemmyClient client;
 
-//       expect(result.communityView.community.name, equals('test_community'));
-//       expect(result.communityView.community.title, equals('Test Community'));
-//     });
+  setUpAll(() async {
+    client = await LemmyClient.initialize(
+      instance: instance,
+      version: version,
+      scheme: scheme,
+    );
+  });
 
-//     test('should properly create a community', () async {
-//       await client.account.login(username: 'lemmy', password: 'lemmylemmy');
+  group('Community', () {
+    test('should properly fetch a list of communities', () async {
+      final result = await client.community.list();
+      expect(result, isNotNull);
+    });
 
-//       final result = await client.community.create(
-//         name: 'test_community',
-//         title: 'Test Community',
-//       );
+    test('should properly fetch a list of communities with nsfw enabled', () async {
+      final result = await client.community.list(nsfw: true);
+      expect(result, isNotNull);
+    });
 
-//       expect(result.communityView.community.name, equals('test_community'));
-//       expect(result.communityView.community.title, equals('Test Community'));
-//     });
+    test('should properly create a new community', () async {
+      await client.account.login(username: username, password: password);
 
-//     test('should properly fetch a community', () async {
-//       final result = await client.community(id: 2).details();
+      final result = await client.community.create(
+        name: generateRandomString(10),
+        title: 'Community',
+      );
 
-//       expect(result.communityView.community.name, equals('test_community'));
-//       expect(result.communityView.community.title, equals('Test Community'));
-//     });
-//   });
-// }
+      expect(result, isNotNull);
+      expect(result.info, isNotNull);
+    });
+  });
+}

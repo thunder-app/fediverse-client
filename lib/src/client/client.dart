@@ -84,7 +84,7 @@ class LemmyClient {
     feed = FeedHelper(this);
     post = PostHelper(this);
     // user = UserHelper(this);
-    // community = CommunityHelper(this);
+    community = CommunityHelper(this);
   }
 
   /// Initializes the client with the given parameters.

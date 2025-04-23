@@ -321,4 +321,85 @@ class AccountHelper {
         throw Exception('Unsupported version');
     }
   }
+
+  /// client.account.media();
+  ///
+  /// // Fetch account subscriptions
+  /// client.account.subscriptions();
+  ///
+  /// // Fetch account notifications
+  /// client.account.notifications.unread;
+  /// client.account.notifications.mentions();
+  /// client.account.notifications.messages();
+  /// client.account.notifications.replies();
+  ///
+  /// // Import and export account settings
+  /// client.account.settings.import();
+  /// client.account.settings.export();
+}
+
+abstract class IAccountHelper {
+  /// Refreshes the current account's information.
+  Future<Map<String, dynamic>?> refresh();
+
+  /// Logs in the user with the given username/email and password.
+  Future<Map<String, dynamic>> login({required String username, required String password, String? token});
+
+  /// Lists all the logins for the current authenticated user.
+  Future<dynamic> logins();
+
+  /// Logs out the current authenticated user.
+  Future<Map<String, dynamic>> logout();
+
+  /// Fetches the current account's posts.
+  Future<Map<String, dynamic>> posts({
+    String? sort,
+    int? page,
+    int? limit,
+    String? cursor,
+    bool? saved,
+  });
+
+  /// Fetches the current account's comments.
+  Future<Map<String, dynamic>> comments({
+    String? sort,
+    int? page,
+    int? limit,
+    String? cursor,
+    bool? saved,
+  });
+
+  /// Fetches the current account's media.
+  Future<Map<String, dynamic>> media({
+    String? sort,
+    int? page,
+    int? limit,
+    String? cursor,
+  });
+
+  /// Fetches the current account's subscriptions.
+  Future<Map<String, dynamic>> subscriptions({
+    String? sort,
+    int? page,
+    int? limit,
+    String? cursor,
+  });
+
+  /// Fetches the current account's notifications.
+  Future<Map<String, dynamic>> notifications({
+    String? sort,
+    int? page,
+    int? limit,
+    String? cursor,
+  });
+
+  /// Imports the current account's settings.
+  Future<Map<String, dynamic>> importSettings({
+    String? filePath,
+  });
+
+  /// Exports the current account's settings.
+  Future<Map<String, dynamic>> exportSettings({
+    String? filePath,
+  });
 }

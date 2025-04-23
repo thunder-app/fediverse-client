@@ -12,21 +12,24 @@ import 'package:lemmy_dart_client/src/client/utils/endpoints.dart';
 /// final post = client.post(id: 1).refresh();
 /// post.upvote(); // Upvotes the post - when called on an already upvoted post, it will remove the upvote
 /// post.save(); // Saves the post - when called on an already saved post, it will unsave the post
-///
-/// // You can create a new post by calling the create method. This returns a post that you can interact with.
-/// final newPost = client.post.create();
-/// newPost.vote();
 /// ```
 class Post {
+  /// The client instance.
   final LemmyClient _client;
 
   /// The post id.
   final int id;
 
+  /// Initializes a new post with the given ID.
   Post(this._client, {required this.id});
 
+  /// Initializes a new post with the given information.
+  Post.populate(this._client, {required this.id, this.info, this.comments});
+
+  /// The post information.
   Map<String, dynamic>? info;
 
+  /// The comments of the post.
   List<Map<String, dynamic>>? comments;
 
   /// Refreshes the post information. This is used to fetch the entire post information from the server.
@@ -34,8 +37,10 @@ class Post {
   /// When successful, the client's site information is also updated.
   Future<Map<String, dynamic>> refresh() async {
     final v4Endpoint = '/post';
+    final path = getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version);
+
     final result = await _client.sendGetRequest(
-      path: getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version),
+      path: path,
       body: {
         'id': id,
       },
