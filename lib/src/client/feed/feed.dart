@@ -1,65 +1,47 @@
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/utils/endpoints.dart';
-import 'package:lemmy_dart_client/src/client/utils/post_sort.dart';
+import 'dart:convert';
 
+import 'package:lemmy_dart_client/src/client/client.dart';
+
+/// This class defines a series of actions that can be performed on a given feed.
+///
+/// Usage:
+/// ```dart
+/// final client = await LemmyClient.initialize({
+///   instance: 'lemmy.world',
+///   scheme: 'https',
+/// });
+///
+/// // Fetch the posts for the feed
+/// final posts = await client.feed(type: 'All').posts(sort: 'Active', limit: 10);
+/// ```
 class Feed {
+  /// The client instance.
   final LemmyClient _client;
 
-  /// The feed type to fetch.
+  /// The feed type.
   final String type;
 
-  Feed(this._client, {required this.type}) {
-    assert(type == 'local' || type == 'subscribed' || type == 'all' || type == 'moderator');
-  }
+  /// Private constructor for creating a Feed instance.
+  Feed(this._client, {required this.type});
 
-  /// The feed type to fetch. This is internal as the types might change.
-  String _getType() {
-    if ((type == 'subscribed' || type == 'moderator') && _client.auth == null) {
-      throw Exception('You must be authenticated to view the $type feed.');
-    }
-
-    return switch (type) {
-      'all' => 'All',
-      'local' => 'Local',
-      'subscribed' => 'Subscribed',
-      'moderator' => 'ModeratorView',
-      _ => throw Exception('Invalid feed type'),
-    };
-  }
-
-  /// Fetches posts from the given feed.
+  /// Fetches the posts for the given feed.
   ///
-  /// Returns a map containing the list of posts, and the next cursor.
+  /// A optional [sort] can be provided to sort the posts.
+  /// A optional [cursor] can be provided to fetch the posts after the given cursor.
+  /// A optional [limit] can be provided to limit the number of posts returned.
   Future<Map<String, dynamic>> posts({
     String? sort,
-    String? topSort, // Top sort type (e.g., hour, six_hours, twelve_hours, day, week, month, three_months, six_months, nine_months, year, all)
-    Duration? range, // Time range in seconds to show posts from (e.g., 3600 for the last hour)
     String? cursor,
-    bool? hidden, // Overrides user settings and shows hidden posts
-    bool? read, // Overrides user settings and shows read posts
-    bool? nsfw, // Overrides user settings and shows NSFW posts
+    int? limit,
   }) async {
-    if (_client.version == 'v3' && range != null) {
-      // If v3, range is ignored.
-      print('WARN: The [range] parameter is not supported in v3. Ignoring the parameter.');
-    }
+    final endpoint = '/post/list';
+    final result = await _client.sendGetRequest(path: endpoint, body: {
+      'type_': type,
+      if (sort != null) 'sort': sort,
+      if (cursor != null) 'page_cursor': cursor,
+      if (limit != null) 'limit': limit,
+    });
 
-    final v4Endpoint = '/post/list';
-    final path = getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version);
-
-    final result = await _client.sendGetRequest(
-      path: path,
-      body: {
-        'type_': _getType(),
-        'sort': sort != null ? getSort(sort, _client.version) : null,
-        'time_range_seconds': range?.inSeconds,
-        'show_hidden': hidden,
-        'show_read': read,
-        'show_nsfw': nsfw,
-        'page_cursor': cursor,
-      },
-    );
-
-    return result;
+    return jsonDecode(result.body);
   }
 }

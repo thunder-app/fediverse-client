@@ -1,119 +1,56 @@
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/utils/endpoints.dart';
+import 'dart:convert';
 
-/// The [Post] class is used to interact with a given post.
-/// This class should only implement methods that are specific to a single post.
+import 'package:lemmy_dart_client/src/client/client.dart';
+
+/// This class defines a series of actions that can be performed on a given post.
 ///
-/// Example:
+/// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize();
+/// final client = await LemmyClient.initialize({
+///   instance: 'lemmy.world',
+///   scheme: 'https',
+/// });
 ///
-/// // Fetch a post with a given ID, and interact with it.
-/// final post = client.post(id: 1).refresh();
-/// post.upvote(); // Upvotes the post - when called on an already upvoted post, it will remove the upvote
-/// post.save(); // Saves the post - when called on an already saved post, it will unsave the post
+/// // Fetch the post information
+/// final postInformation = await client.post(id: 1).info();
+///
+/// // Fetch the comments for the post
+/// final comments = await client.post(id: 1).comments(sort: 'New', limit: 10);
 /// ```
 class Post {
   /// The client instance.
   final LemmyClient _client;
 
   /// The post id.
-  final int id;
+  final String id;
 
-  /// Initializes a new post with the given ID.
+  /// Initializes a new post with the given id.
   Post(this._client, {required this.id});
 
-  /// Initializes a new post with the given information.
-  Post.populate(this._client, {required this.id, this.info, this.comments});
+  /// Fetches the information of the given post.
+  Future<Map<String, dynamic>> info() async {
+    final endpoint = '/post';
+    final result = await _client.sendGetRequest(path: endpoint, body: {
+      'id': id,
+    });
 
-  /// The post information.
-  Map<String, dynamic>? info;
-
-  /// The comments of the post.
-  List<Map<String, dynamic>>? comments;
-
-  /// Refreshes the post information. This is used to fetch the entire post information from the server.
-  ///
-  /// When successful, the client's site information is also updated.
-  Future<Map<String, dynamic>> refresh() async {
-    final v4Endpoint = '/post';
-    final path = getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version);
-
-    final result = await _client.sendGetRequest(
-      path: path,
-      body: {
-        'id': id,
-      },
-    );
-
-    info = result;
-    return result;
+    return jsonDecode(result.body);
   }
 
-  /// Applies the given edit to the post. This will return a new post object that you can interact with.
-  ///
-  /// This action is only available if the post is created by the current user.
-  Future<Map<String, dynamic>> edit() {
-    throw Exception('Not implemented');
-  }
+  /// Fetches the comments for the given post.
+  Future<Map<String, dynamic>> comments({
+    String? sort,
+    String? cursor,
+    int? limit,
+  }) async {
+    final endpoint = '/comment/list';
+    final result = await _client.sendGetRequest(path: endpoint, body: {
+      'post_id': id,
+      'sort': sort,
+      'page_cursor': cursor,
+      'limit': limit,
+    });
 
-  /// Deletes the post.
-  ///
-  /// This action is only available if the post is created by the current user.
-  Future<Map<String, dynamic>> delete() {
-    throw Exception('Not implemented');
-  }
-
-  /// Upvotes the post. If the post is already upvoted, it will remove the upvote.
-  Future<Map<String, dynamic>> upvote() {
-    throw Exception('Not implemented');
-  }
-
-  /// Downvotes the post. If the post is already downvoted, it will remove the downvote.
-  Future<Map<String, dynamic>> downvote() {
-    throw Exception('Not implemented');
-  }
-
-  /// Saves the post. If the post is already saved, it will unsave the post.
-  Future<Map<String, dynamic>> save() {
-    throw Exception('Not implemented');
-  }
-
-  /// Marks the post as read. If the post is already read, it will mark it as unread.
-  Future<Map<String, dynamic>> read() {
-    throw Exception('Not implemented');
-  }
-
-  /// Hides the post. If the post is already hidden, it will unhide the post.
-  Future<Map<String, dynamic>> hide() {
-    throw Exception('Not implemented');
-  }
-
-  /// Reports the post to the moderator/admin of the instance.
-  Future<Map<String, dynamic>> report() {
-    throw Exception('Not implemented');
-  }
-
-  /// Locks the post. If the post is already locked, it will unlock the post.
-  ///
-  /// This action is only available to moderators/admins.
-  Future<Map<String, dynamic>> lock() {
-    throw Exception('Not implemented');
-  }
-
-  /// Removes the post.
-  ///
-  /// This action is only available to moderators/admins.
-  Future<Map<String, dynamic>> remove() {
-    throw Exception('Not implemented');
-  }
-
-  /// Pins the post. If the post is already pinned, it will unpin the post.
-  /// The [type] parameter can be used to specify the type of pinning. By default, it is set to 'community'.
-  /// The available types are: ['community', 'instance'].
-  ///
-  /// This action is only available to moderators/admins.
-  Future<Map<String, dynamic>> pin({String type = 'community'}) {
-    throw Exception('Not implemented');
+    return jsonDecode(result.body);
   }
 }

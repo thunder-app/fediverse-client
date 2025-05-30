@@ -1,56 +1,201 @@
+import 'dart:convert';
+
 import 'package:lemmy_dart_client/src/client/client.dart';
 
+/// This class defines a series of actions that can be performed on a given community.
+///
+/// Usage:
+/// ```dart
+/// final client = await LemmyClient.initialize({
+///   instance: 'lemmy.world',
+///   scheme: 'https',
+/// });
+///
+/// // Initialize the community and fetch the community information
+/// final community = await Community.initialize(client, id: 1);
+///
+/// // Submit a new post to the community
+/// final post = await community.submit(name: 'Test Post', url: 'https://example.com');
+///
+/// // Fetch the posts for the community
+/// final posts = await community.posts(type: 'All', sort: 'Active', limit: 10);
+///
+///
+/// ```
 class Community {
+  /// The client instance.
   final LemmyClient _client;
 
-  /// The id of the community for the given instance.
-  ///
-  /// The id of one community may not be the same as the id of the same community on another instance.
-  /// Therefore, it is recommended to use the name field with the instance instead of the id field.
+  /// The community id.
   final int? id;
 
-  /// The name of the community. For example: thunder, or thunder@xyz.tld
-  ///
-  /// If the instance is not provided, it will fetch the community from the current instance.
+  /// The community name. This can be in the format `community_name@instance.tld` or just `community_name`.
   final String? name;
 
-  Community(this._client, {this.id, this.name});
+  /// The internal community information. This should be updated whenever the community information changes.
+  Map<String, dynamic>? _community;
 
-  /// Initializes a new community with the given information.
-  Community.populate(this._client, {this.id, this.name, this.info});
+  /// Private constructor for creating a Community instance.
+  Community._(this._client, {this.id, this.name}) : assert((id == null) != (name == null), 'Exactly one of id or name must be provided');
 
-  /// The community information.
-  Map<String, dynamic>? info;
+  /// Initializes a new community with the given id or name and fetches its information.
+  /// Either [id] or [name] must be provided, but not both.
+  static Future<Community> initialize(LemmyClient client, {int? id, String? name}) async {
+    final community = Community._(client, id: id, name: name);
+    await community.info();
+    return community;
+  }
 
-  /// Fetches the details of a community with the given id or name.
-  // Future<CommunityResponse> details() async {
-  //   final result = await _client.get(
-  //     path: '/community',
-  //     body: {
-  //       'id': id,
-  //       'name': name,
-  //     },
-  //   );
+  /// Fetches the information of the given post.
+  Future<Map<String, dynamic>> info() async {
+    final endpoint = '/community';
 
-  //   return CommunityResponse.fromJson(result);
-  // }
+    final result = await _client.sendGetRequest(path: endpoint, body: {
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+    });
 
-  /// Fetches more posts from the given feed.
+    // Store the community information for later use.
+    _community = jsonDecode(result.body);
+    return _community!;
+  }
+
+  /// Fetches the posts for the given community.
   ///
-  /// When successful, the client's site information is also updated.
-  // Future<Map<String, dynamic>> posts(
-  //   String? sort,
-  //   Duration? range, // Time range in seconds to show posts from (e.g., 3600 for the last hour)
-  //   String? cursor,
-  //   bool? read, // Shows read posts, overrides user settings
-  //   bool? nsfw, // Shows NSFW posts, overrides user settings
-  // ) async {
-  //   final v4Endpoint = '/post/list';
-  //   final result = await _client.get(path: getEndpoint(endpoint: v4Endpoint, version: 'v4', targetVersion: _client.version), body: {
-  //     'type_': _getType(),
-  //     'sort': sort != null ? getSort(sort) : null,
+  /// A optional [sort] can be provided to sort the posts.
+  /// A optional [cursor] can be provided to fetch the posts after the given cursor.
+  /// A optional [limit] can be provided to limit the number of posts returned.
+  Future<Map<String, dynamic>> posts({
+    String? sort,
+    String? cursor,
+    int? limit,
+  }) async {
+    int? communityId = _community?['community_view']['community']['id'];
+
+    final endpoint = '/post/list';
+    final result = await _client.sendGetRequest(path: endpoint, body: {
+      'community_id': communityId,
+      if (sort != null) 'sort': sort,
+      if (cursor != null) 'page_cursor': cursor,
+      if (limit != null) 'limit': limit,
+    });
+
+    return jsonDecode(result.body);
+  }
+
+  // /// Edits the given community.
+  // Future<Map<String, dynamic>> edit({
+  //   String? title,
+  //   String? description,
+  //   String? sidebar,
+  //   String? icon,
+  //   String? banner,
+  //   bool? nsfw,
+  //   bool? restricted,
+  //   List<int>? languages,
+  //   String? visibility,
+  // }) async {
+  //   final communityId = _community?['community_view']['community']['id'];
+
+  //   final endpoint = '/community';
+  //   final result = await _client.sendPutRequest(path: endpoint, body: {
+  //     'community_id': communityId,
+  //     if (title != null) 'title': title,
+  //     if (description != null) 'description': description,
+  //     if (sidebar != null) 'sidebar': sidebar,
+  //     if (icon != null) 'icon': icon,
+  //     if (banner != null) 'banner': banner,
+  //     if (nsfw != null) 'nsfw': nsfw,
+  //     if (restricted != null) 'posting_restricted_to_mods': restricted,
+  //     if (languages != null) 'discussion_languages': languages,
+  //     if (visibility != null) 'visibility': visibility,
   //   });
 
-  //   return result;
+  //   return jsonDecode(result.body);
+  // }
+
+  // /// Deletes the given community.
+  // Future<Map<String, dynamic>> delete({String? reason}) async {
+  //   final communityId = _community?['community_view']['community']['id'];
+
+  //   final endpoint = '/community/delete';
+  //   final result = await _client.sendPostRequest(path: endpoint, body: {
+  //     'community_id': communityId,
+  //     'deleted': true,
+  //     'reason': reason,
+  //   });
+
+  //   return jsonDecode(result.body);
+  // }
+
+  // /// Restores the given community.
+  // Future<Map<String, dynamic>> restore({String? reason}) async {
+  //   final communityId = _community?['community_view']['community']['id'];
+
+  //   final endpoint = '/community/delete';
+  //   final result = await _client.sendPostRequest(path: endpoint, body: {
+  //     'community_id': communityId,
+  //     'deleted': false,
+  //     'reason': reason,
+  //   });
+
+  //   return jsonDecode(result.body);
+  // }
+
+  // /// Subscribes to the given community.
+  // Future<Map<String, dynamic>> subscribe() async {
+  //   final communityId = _community?['community_view']['community']['id'];
+
+  //   final endpoint = '/community/follow';
+  //   final result = await _client.sendPostRequest(path: endpoint, body: {
+  //     'community_id': communityId,
+  //     'follow': true,
+  //   });
+
+  //   return jsonDecode(result.body);
+  // }
+
+  // /// Unsubscribes from the given community.
+  // Future<Map<String, dynamic>> unsubscribe() async {
+  //   final communityId = _community?['community_view']['community']['id'];
+
+  //   final endpoint = '/community/follow';
+  //   final result = await _client.sendPostRequest(path: endpoint, body: {
+  //     'community_id': communityId,
+  //     'follow': false,
+  //   });
+
+  //   return jsonDecode(result.body);
+  // }
+
+  // /// Submits a new post to the given community.
+  // Future<Map<String, dynamic>> submit({
+  //   required String name,
+  //   String? url,
+  //   String? body,
+  //   String? altText,
+  //   bool? nsfw,
+  //   int? languageId,
+  //   String? thumbnailUrl,
+  //   List<int>? tags,
+  //   DateTime? scheduledAt,
+  // }) async {
+  //   int? communityId = _community?['community_view']['community']['id'];
+
+  //   final endpoint = '/post';
+  //   final result = await _client.sendPostRequest(path: endpoint, body: {
+  //     'name': name,
+  //     'community_id': communityId,
+  //     if (url != null) 'url': url,
+  //     if (body != null) 'body': body,
+  //     if (altText != null) 'alt_text': body,
+  //     if (nsfw != null) 'nsfw': nsfw,
+  //     if (languageId != null) 'language_id': languageId,
+  //     if (thumbnailUrl != null) 'custom_thumbnail': thumbnailUrl,
+  //     if (tags != null) 'tags': tags,
+  //     if (scheduledAt != null) 'scheduled_publish_time': scheduledAt.millisecondsSinceEpoch,
+  //   });
+
+  //   return jsonDecode(result.body);
   // }
 }

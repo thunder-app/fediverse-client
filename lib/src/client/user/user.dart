@@ -1,126 +1,105 @@
-// import 'package:lemmy_dart_client/src/client/client.dart';
-// import 'package:lemmy_dart_client/src/client/enums/enums.dart';
-// import 'package:lemmy_dart_client/src/models/v4/models.dart';
+import 'dart:convert';
 
-// class User {
-//   final LemmyClient _client;
+import 'package:lemmy_dart_client/src/client/client.dart';
 
-//   final int? id;
+/// This class defines a series of actions that can be performed on a given user.
+///
+/// Usage:
+/// ```dart
+/// final client = await LemmyClient.initialize({
+///   instance: 'lemmy.world',
+///   scheme: 'https',
+/// });
+///
+/// // Initialize the user and fetch the user information
+/// final user = await User.initialize(client, id: '1');
+/// final user = await User.initialize(client, username: 'username');
+///
+/// // Fetch the posts for the user
+/// final posts = await user.posts(sort: 'Active', limit: 10);
+///
+/// // Fetch the comments for the user
+/// final comments = await user.comments(sort: 'Active', limit: 10);
+/// ```
+class User {
+  /// The client instance.
+  final LemmyClient _client;
 
-//   final String? username;
+  /// The user id.
+  final String? id;
 
-//   User(this._client, {this.id, this.username});
+  /// The user username.
+  final String? username;
 
-//   Future<FullPersonView> details() async {
-//     String path = '/person';
-//     if (_client.version == 'v3') path = '/user';
+  /// The internal user information. This should be updated whenever the user information changes.
+  Map<String, dynamic>? _user;
 
-//     final result = await _client.get(
-//       path: path,
-//       body: {
-//         'person_id': id,
-//         'username': username,
-//       },
-//     );
+  /// Private constructor for creating a User instance.
+  User._(this._client, {this.id, this.username}) : assert((id == null) != (username == null), 'Exactly one of id or username must be provided');
 
-//     return FullPersonView.fromJson(result);
-//   }
+  /// Initializes a new user with the given id or username and fetches its information.
+  /// Either [id] or [username] must be provided, but not both.
+  static Future<User> initialize(LemmyClient client, {String? id, String? username}) async {
+    final user = User._(client, id: id, username: username);
+    await user.info();
+    return user;
+  }
 
-//   /// Blocks a user by their [id].
-//   ///
-//   /// If the user [id] is not provided, it fetches the user details first to get the user [id].
-//   Future<BlockPersonResponse> block() async {
-//     int? id = this.id;
+  /// Fetches the information of the given user.
+  Future<Map<String, dynamic>> info() async {
+    final endpoint = '/person';
 
-//     String path = '/account/block/person';
-//     if (_client.version == 'v3') path = '/user/block';
+    final result = await _client.sendGetRequest(path: endpoint, body: {
+      if (id != null) 'person_id': id,
+      if (username != null) 'username': username,
+    });
 
-//     // Fetch the user id if it is not provided
-//     if (id == null) {
-//       final fullPersonView = await details();
-//       id = fullPersonView.personView.person.id;
-//     }
+    // Store the user information for later use.
+    _user = jsonDecode(result.body);
+    return _user!;
+  }
 
-//     final result = await _client.post(
-//       path: path,
-//       body: {
-//         'person_id': id,
-//         'block': true,
-//       },
-//     );
+  /// Fetches the posts for the given user.
+  Future<Map<String, dynamic>> posts({
+    String? sort,
+    int? limit,
+    bool? saved,
+    String? cursor,
+  }) async {
+    final userId = _user?['person_view']['person']['id'];
 
-//     return BlockPersonResponse.fromJson(result);
-//   }
+    final endpoint = '/person/content';
+    final result = await _client.sendGetRequest(path: endpoint, body: {
+      'type_': "Posts",
+      'person_id': userId,
+      'sort': sort,
+      'limit': limit,
+      'saved_only': saved,
+      'page_cursor': cursor,
+    });
 
-//   /// Unblocks a user by their [id].
-//   ///
-//   /// If the user [id] is not provided, it fetches the user details first to get the user [id].
-//   Future<BlockPersonResponse> unblock() async {
-//     int? id = this.id;
+    return jsonDecode(result.body);
+  }
 
-//     String path = '/account/block/person';
-//     if (_client.version == 'v3') path = '/user/block';
+  /// Fetches the comments for the given user.
+  Future<Map<String, dynamic>> comments({
+    String? sort,
+    int? limit,
+    bool? saved,
+    String? cursor,
+  }) async {
+    final userId = _user?['person_view']['person']['id'];
 
-//     // Fetch the user id if it is not provided
-//     if (id == null) {
-//       final fullPersonView = await details();
-//       id = fullPersonView.personView.person.id;
-//     }
+    final endpoint = '/person/content';
+    final result = await _client.sendGetRequest(path: endpoint, body: {
+      'type_': "Comments",
+      'person_id': userId,
+      'sort': sort,
+      'limit': limit,
+      'saved_only': saved,
+      'page_cursor': cursor,
+    });
 
-//     final result = await _client.post(
-//       path: path,
-//       body: {
-//         'person_id': id,
-//         'block': false,
-//       },
-//     );
-
-//     return BlockPersonResponse.fromJson(result);
-//   }
-
-//   Future<List<PostView>> posts({
-//     PostSortType? sort,
-//     int? page,
-//     int? limit,
-//     int? communityId,
-//     bool? savedOnly,
-//   }) async {
-//     final result = await _client.get(
-//       path: '/person',
-//       body: {
-//         'person_id': id,
-//         'username': username,
-//         'sort': sort?.name,
-//         'page': page,
-//         'limit': limit,
-//         'community_id': communityId,
-//         'saved_only': savedOnly,
-//       },
-//     );
-
-//     final fullPersonView = FullPersonView.fromJson(result);
-//     return fullPersonView.posts;
-//   }
-
-//   Future<List<CommentView>> comments({
-//     int? page,
-//     int? limit,
-//     int? communityId,
-//     bool? savedOnly,
-//   }) async {
-//     final result = await _client.get(
-//       path: '/person',
-//       body: {
-//         'person_id': id,
-//         'username': username,
-//         'page': page,
-//         'limit': limit,
-//         'community_id': communityId,
-//         'saved_only': savedOnly,
-//       },
-//     );
-
-//     final fullPersonView = FullPersonView.fromJson(result);
-//     return fullPersonView.comments;
-//   }
-// }
+    return jsonDecode(result.body);
+  }
+}
