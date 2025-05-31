@@ -135,7 +135,7 @@ class LemmyClient {
     await client.site.info();
 
     // Initialize account helper (loads account info if auth is available)
-    await client.account.initialize();
+    if (auth != null) await AccountHelper.initialize(client);
 
     return client;
   }

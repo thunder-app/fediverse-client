@@ -37,9 +37,9 @@ class Feed {
     final endpoint = '/post/list';
     final result = await _client.sendGetRequest(path: endpoint, body: {
       'type_': type,
-      if (sort != null) 'sort': sort,
-      if (cursor != null) 'page_cursor': cursor,
-      if (limit != null) 'limit': limit,
+      'sort': sort,
+      'page_cursor': cursor,
+      'limit': limit,
     });
 
     return jsonDecode(result.body);

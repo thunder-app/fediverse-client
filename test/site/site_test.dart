@@ -46,11 +46,13 @@ void main() {
     //   });
     // });
 
-    // group('metadata() method', () {
-    //   test('should exist and return Future<Map<String, dynamic>>', () async {
-    //     final result = await client.site.call(instance: 'https://lemmy.world').metadata();
-    //     expect(result, contains('metadata'));
-    //   });
-    // });
+    group('metadata() method', () {
+      test('should exist and return Future<Map<String, dynamic>>', () async {
+        await client.account.login(username: username, password: password);
+
+        final result = await client.site.call(instance: 'https://lemmy.world').metadata();
+        expect(result, contains('metadata'));
+      });
+    });
   });
 }

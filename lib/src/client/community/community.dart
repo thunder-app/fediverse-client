@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:lemmy_dart_client/src/client/client.dart';
+import 'package:lemmy_dart_client/src/client/post/post.dart';
+import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
 
 /// This class defines a series of actions that can be performed on a given community.
 ///
@@ -11,53 +13,160 @@ import 'package:lemmy_dart_client/src/client/client.dart';
 ///   scheme: 'https',
 /// });
 ///
-/// // Initialize the community and fetch the community information
-/// final community = await Community.initialize(client, id: 1);
+/// // Fetch a given community by id or name
+/// final community = await client.community(id: 1);
+/// final community = await client.community(name: 'community_name');
+/// final communityInformation = await community.info();
+///
+/// // Refreshes the community information and returns the updated community information.
+/// final communityInformation = await community.info(refresh: true);
+///
+/// // Subscribe to the community
+/// final community = await community.subscribe();
+///
+/// // Unsubscribe from the community
+/// final community = await community.unsubscribe();
 ///
 /// // Submit a new post to the community
 /// final post = await community.submit(name: 'Test Post', url: 'https://example.com');
 ///
 /// // Fetch the posts for the community
 /// final posts = await community.posts(type: 'All', sort: 'Active', limit: 10);
-///
-///
 /// ```
 class Community {
   /// The client instance.
   final LemmyClient _client;
 
   /// The community id.
-  final int? id;
+  int? id;
 
   /// The community name. This can be in the format `community_name@instance.tld` or just `community_name`.
-  final String? name;
+  String? name;
 
   /// The internal community information. This should be updated whenever the community information changes.
   Map<String, dynamic>? _community;
 
   /// Private constructor for creating a Community instance.
-  Community._(this._client, {this.id, this.name}) : assert((id == null) != (name == null), 'Exactly one of id or name must be provided');
+  Community._(this._client);
 
-  /// Initializes a new community with the given id or name and fetches its information.
-  /// Either [id] or [name] must be provided, but not both.
-  static Future<Community> initialize(LemmyClient client, {int? id, String? name}) async {
-    final community = Community._(client, id: id, name: name);
-    await community.info();
-    return community;
+  /// Initializes a new community instance.
+  /// If [id] or [name] is provided, the community information will be fetched from the API.
+  ///
+  /// If [community] is provided, the community information will be used instead of fetching it from the API.
+  static Future<Community> initialize(LemmyClient client, {int? id, String? name, Map<String, dynamic>? community}) async {
+    final instance = Community._(client);
+
+    // If the community information is pre-fetched, use it.
+    if (community != null && community.containsKey('community_view')) {
+      instance._community = community;
+      instance.id = community['community_view']['community']['id'];
+      instance.name = community['community_view']['community']['name'];
+      return instance;
+    }
+
+    // Otherwise, fetch the community information from its id or name.
+    assert((id == null) != (name == null), 'Exactly one of id or name must be provided');
+    instance.id = id;
+    instance.name = name;
+
+    await instance.info();
+    instance.id = instance._community?['community_view']['community']['id'];
+    instance.name = instance._community?['community_view']['community']['name'];
+
+    return instance;
   }
 
-  /// Fetches the information of the given post.
-  Future<Map<String, dynamic>> info() async {
+  /// Fetches the information of the given community.
+  Future<Map<String, dynamic>> info({bool refresh = false}) async {
+    if (!refresh && _community != null) return _community!;
+
     final endpoint = '/community';
 
-    final result = await _client.sendGetRequest(path: endpoint, body: {
-      if (id != null) 'id': id,
-      if (name != null) 'name': name,
-    });
+    final result = await _client.sendGetRequest(
+      path: endpoint,
+      body: {
+        'id': id,
+        'name': name,
+      },
+    );
 
-    // Store the community information for later use.
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    // Update the internal community information.
     _community = jsonDecode(result.body);
     return _community!;
+  }
+
+  /// Subscribes to the given community.
+  Future<Community> subscribe() async {
+    final endpoint = '/community/follow';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'community_id': id,
+        'follow': true,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    _community = jsonDecode(result.body);
+    return this;
+  }
+
+  /// Unsubscribes from the given community.
+  Future<Community> unsubscribe() async {
+    final endpoint = '/community/follow';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'community_id': id,
+        'follow': false,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    _community = jsonDecode(result.body);
+    return this;
+  }
+
+  /// Submits a new post to the given community.
+  Future<Post> submit({
+    required String name,
+    String? url,
+    String? body,
+    String? altText,
+    bool? nsfw,
+    int? languageId,
+    String? thumbnailUrl,
+    List<int>? tags,
+    DateTime? scheduledAt,
+  }) async {
+    final endpoint = '/post';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'name': name,
+        'community_id': id,
+        'url': url,
+        'body': body,
+        'alt_text': body,
+        'nsfw': nsfw,
+        'language_id': languageId,
+        'custom_thumbnail': thumbnailUrl,
+        'tags': tags,
+        if (scheduledAt != null) 'scheduled_publish_time': scheduledAt.millisecondsSinceEpoch ~/ 1000,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final post = jsonDecode(result.body);
+    return Post.initialize(_client, post: post);
   }
 
   /// Fetches the posts for the given community.
@@ -65,22 +174,41 @@ class Community {
   /// A optional [sort] can be provided to sort the posts.
   /// A optional [cursor] can be provided to fetch the posts after the given cursor.
   /// A optional [limit] can be provided to limit the number of posts returned.
-  Future<Map<String, dynamic>> posts({
+  Future<PostListResult> posts({
     String? sort,
     String? cursor,
     int? limit,
   }) async {
-    int? communityId = _community?['community_view']['community']['id'];
-
     final endpoint = '/post/list';
-    final result = await _client.sendGetRequest(path: endpoint, body: {
-      'community_id': communityId,
-      if (sort != null) 'sort': sort,
-      if (cursor != null) 'page_cursor': cursor,
-      if (limit != null) 'limit': limit,
-    });
 
-    return jsonDecode(result.body);
+    final result = await _client.sendGetRequest(
+      path: endpoint,
+      body: {
+        'community_id': id,
+        'sort': sort,
+        'page_cursor': cursor,
+        'limit': limit,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    final postsData = response['posts'] as List<dynamic>;
+
+    // Create Post objects from the post data
+    final posts = await Future.wait(
+      postsData.map((post) async {
+        final postId = post['post']['id'] as int;
+        return Post.initialize(_client, id: postId, post: {'post_view': post});
+      }),
+    );
+
+    return PostListResult(
+      posts: posts,
+      nextCursor: response['next_page'] as String?,
+      prevCursor: response['prev_page'] as String?,
+    );
   }
 
   // /// Edits the given community.
@@ -137,63 +265,6 @@ class Community {
   //     'community_id': communityId,
   //     'deleted': false,
   //     'reason': reason,
-  //   });
-
-  //   return jsonDecode(result.body);
-  // }
-
-  // /// Subscribes to the given community.
-  // Future<Map<String, dynamic>> subscribe() async {
-  //   final communityId = _community?['community_view']['community']['id'];
-
-  //   final endpoint = '/community/follow';
-  //   final result = await _client.sendPostRequest(path: endpoint, body: {
-  //     'community_id': communityId,
-  //     'follow': true,
-  //   });
-
-  //   return jsonDecode(result.body);
-  // }
-
-  // /// Unsubscribes from the given community.
-  // Future<Map<String, dynamic>> unsubscribe() async {
-  //   final communityId = _community?['community_view']['community']['id'];
-
-  //   final endpoint = '/community/follow';
-  //   final result = await _client.sendPostRequest(path: endpoint, body: {
-  //     'community_id': communityId,
-  //     'follow': false,
-  //   });
-
-  //   return jsonDecode(result.body);
-  // }
-
-  // /// Submits a new post to the given community.
-  // Future<Map<String, dynamic>> submit({
-  //   required String name,
-  //   String? url,
-  //   String? body,
-  //   String? altText,
-  //   bool? nsfw,
-  //   int? languageId,
-  //   String? thumbnailUrl,
-  //   List<int>? tags,
-  //   DateTime? scheduledAt,
-  // }) async {
-  //   int? communityId = _community?['community_view']['community']['id'];
-
-  //   final endpoint = '/post';
-  //   final result = await _client.sendPostRequest(path: endpoint, body: {
-  //     'name': name,
-  //     'community_id': communityId,
-  //     if (url != null) 'url': url,
-  //     if (body != null) 'body': body,
-  //     if (altText != null) 'alt_text': body,
-  //     if (nsfw != null) 'nsfw': nsfw,
-  //     if (languageId != null) 'language_id': languageId,
-  //     if (thumbnailUrl != null) 'custom_thumbnail': thumbnailUrl,
-  //     if (tags != null) 'tags': tags,
-  //     if (scheduledAt != null) 'scheduled_publish_time': scheduledAt.millisecondsSinceEpoch,
   //   });
 
   //   return jsonDecode(result.body);

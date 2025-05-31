@@ -1,6 +1,10 @@
 import 'dart:convert';
 
 import 'package:lemmy_dart_client/src/client/client.dart';
+import 'package:lemmy_dart_client/src/client/comment/comment.dart';
+import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
+import 'package:lemmy_dart_client/src/client/post/post.dart';
+import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
 import 'package:lemmy_dart_client/src/client/inbox/inbox_helper.dart';
 
 /// This class defines a series of actions that can be performed on the current account.
@@ -41,33 +45,55 @@ class AccountHelper {
 
   AccountHelper(this._client);
 
-  /// Initializes the account helper and loads account information if authentication is available.
-  Future<void> initialize() async {
-    if (_client.auth != null) {
-      try {
-        await info();
-      } catch (e) {
-        // If loading account info fails, clear the auth token as it might be invalid
-        _client.auth = null;
-      }
-    }
-  }
-
   /// The inbox helper.
   InboxHelper get inbox => InboxHelper(_client);
+
+  /// The account id.
+  int? id;
 
   /// The account information.
   Map<String, dynamic>? _account;
 
-  /// Ensures that account information is loaded. If not, attempts to load it.
-  /// Throws an exception if no authentication token is available.
-  Future<void> _checkAccountInfo() async {
-    if (_account == null) {
-      if (_client.auth == null) {
-        throw Exception('Authentication required. Please login first.');
-      }
-      await info();
+  /// Private constructor for creating a AccountHelper instance.
+  AccountHelper._(this._client);
+
+  /// Initializes a new account helper instance.
+  ///
+  /// If [account] is provided, the account information will be used instead of fetching it from the API.
+  static Future<AccountHelper> initialize(LemmyClient client, {Map<String, dynamic>? account}) async {
+    final instance = AccountHelper._(client);
+
+    // If the account information is pre-fetched, use it.
+    if (account != null && account.containsKey('local_user_view')) {
+      instance._account = account;
+      instance.id = account['local_user_view']['person']['id'];
+      return instance;
     }
+
+    // If the JWT token is available, fetch the account information.
+    if (client.auth != null) {
+      await instance.info();
+      instance.id = instance._account?['local_user_view']['person']['id'];
+    }
+
+    // Otherwise, throw an error.
+    throw Exception('Account information not found. Please login first.');
+  }
+
+  /// Fetches the information of the given account.
+  Future<Map<String, dynamic>> info({bool refresh = false}) async {
+    if (!refresh && _account != null) return _account!;
+
+    final endpoint = '/account';
+
+    final result = await _client.sendGetRequest(path: endpoint);
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    // Update the internal account information.
+    _account = jsonDecode(result.body);
+    id = _account!['local_user_view']['person']['id'];
+    return _account!;
   }
 
   /// Registers a new account using email and password.
@@ -88,26 +114,31 @@ class AccountHelper {
   }) async {
     final endpoint = '/account/auth/register';
 
-    final result = await _client.sendPostRequest(path: endpoint, body: {
-      'username': username,
-      'password': password,
-      'password_verify': password,
-      'email': email,
-      'show_nsfw': nsfw,
-      'answer': answer,
-      'captcha_uuid': captchaId,
-      'captcha_answer': captchaAnswer,
-    });
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'username': username,
+        'password': password,
+        'password_verify': password,
+        'email': email,
+        'show_nsfw': nsfw,
+        'answer': answer,
+        'captcha_uuid': captchaId,
+        'captcha_answer': captchaAnswer,
+      },
+    );
 
-    final body = jsonDecode(result.body);
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
 
     // If registration was successful and a JWT token was provided, set it and load account info.
-    if (body['jwt'] != null) {
-      _client.auth = body['jwt'];
+    if (response['jwt'] != null) {
+      _client.auth = response['jwt'];
       await info(); // Load account information after successful registration
     }
 
-    return body;
+    return response;
   }
 
   /// Logs in to the account using username (or email) and password.
@@ -119,21 +150,26 @@ class AccountHelper {
     String? totp,
   }) async {
     final endpoint = '/account/auth/login';
-    final result = await _client.sendPostRequest(path: endpoint, body: {
-      'username_or_email': username,
-      'password': password,
-      'totp_2fa_token': totp,
-    });
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'username_or_email': username,
+        'password': password,
+        'totp_2fa_token': totp,
+      },
+    );
 
-    final body = jsonDecode(result.body);
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
 
     // If the login was successful, set the authentication token and load account info.
-    if (body['jwt'] != null) {
-      _client.auth = body['jwt'];
+    if (response['jwt'] != null) {
+      _client.auth = response['jwt'];
       await info(); // Load account information after successful login
     }
 
-    return body;
+    return response;
   }
 
   /// Logs out of the current account.
@@ -141,92 +177,115 @@ class AccountHelper {
     final endpoint = '/account/auth/logout';
     final result = await _client.sendPostRequest(path: endpoint);
 
-    final body = jsonDecode(result.body);
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
 
     // If the logout was successful, clear the authentication token and account info.
-    if (body['success'] == true) {
+    if (response['success'] == true) {
       _client.auth = null;
       _account = null; // Clear stored account information
+      id = null;
     }
 
-    return body;
-  }
-
-  /// Fetches the account's captcha for registration.
-  Future<Map<String, dynamic>> captcha() async {
-    final endpoint = '/account/auth/get_captcha';
-    final result = await _client.sendGetRequest(path: endpoint);
-
-    return jsonDecode(result.body);
-  }
-
-  /// Fetches the current account information.
-  Future<Map<String, dynamic>> info() async {
-    final endpoint = '/account';
-    final result = await _client.sendGetRequest(path: endpoint);
-
-    // Store the account information for later use.
-    _account = jsonDecode(result.body);
-    return _account!;
-  }
-
-  /// Validates the authentication token.
-  Future<Map<String, dynamic>> validateToken() async {
-    final endpoint = '/account/validate_auth';
-    final result = await _client.sendGetRequest(path: endpoint);
-
-    return jsonDecode(result.body);
+    return response;
   }
 
   /// Gets the current account's posts.
-  Future<Map<String, dynamic>> posts({
+  Future<PostListResult> posts({
     String? sort,
     int? limit,
     bool? saved,
     String? cursor,
   }) async {
-    // Ensure account information is loaded
-    await _checkAccountInfo();
-
-    final accountId = _account?['local_user_view']['person']['id'];
-
     final endpoint = '/person/content';
-    final result = await _client.sendGetRequest(path: endpoint, body: {
-      'type_': "Posts",
-      'person_id': accountId,
-      'sort': sort,
-      'limit': limit,
-      'saved_only': saved,
-      'page_cursor': cursor,
-    });
 
-    return jsonDecode(result.body);
+    final response = await _client.sendGetRequest(
+      path: endpoint,
+      body: {
+        'type_': "Posts",
+        'person_id': id,
+        'sort': sort,
+        'limit': limit,
+        'saved_only': saved,
+        'page_cursor': cursor,
+      },
+    );
+
+    if (response.statusCode != 200) throw Exception(jsonDecode(response.body)['error']);
+
+    final result = jsonDecode(response.body);
+    final postsData = result['content'] as List<dynamic>;
+
+    final posts = await Future.wait(
+      postsData.map((post) async {
+        final postId = post['post']['id'] as int;
+        return Post.initialize(_client, id: postId, post: {'post_view': post});
+      }),
+    );
+
+    return PostListResult(
+      posts: posts,
+      nextCursor: result['next_cursor'],
+      prevCursor: result['prev_cursor'],
+    );
   }
 
   /// Gets the current account's comments.
-  Future<Map<String, dynamic>> comments({
+  Future<CommentListResult> comments({
     String? sort,
     int? limit,
     bool? saved,
     String? cursor,
   }) async {
-    // Ensure account information is loaded
-    await _checkAccountInfo();
-
-    final accountId = _account?['local_user_view']['person']['id'];
-
     final endpoint = '/person/content';
-    final result = await _client.sendGetRequest(path: endpoint, body: {
-      'type_': "Comments",
-      'person_id': accountId,
-      'sort': sort,
-      'limit': limit,
-      'saved_only': saved,
-      'page_cursor': cursor,
-    });
 
-    return jsonDecode(result.body);
+    final response = await _client.sendGetRequest(
+      path: endpoint,
+      body: {
+        'type_': "Comments",
+        'person_id': id,
+        'sort': sort,
+        'limit': limit,
+        'saved_only': saved,
+        'page_cursor': cursor,
+      },
+    );
+
+    if (response.statusCode != 200) throw Exception(jsonDecode(response.body)['error']);
+
+    final result = jsonDecode(response.body);
+    final commentsData = result['content'] as List<dynamic>;
+
+    final comments = await Future.wait(
+      commentsData.map((comment) async {
+        final commentId = comment['comment']['id'] as int;
+        return Comment.initialize(_client, id: commentId, comment: {'comment_view': comment});
+      }),
+    );
+
+    return CommentListResult(
+      comments: comments,
+      nextCursor: result['next_cursor'],
+      prevCursor: result['prev_cursor'],
+    );
   }
+
+  // /// Fetches the account's captcha for registration.
+  // Future<Map<String, dynamic>> captcha() async {
+  //   final endpoint = '/account/auth/get_captcha';
+  //   final result = await _client.sendGetRequest(path: endpoint);
+
+  //   return jsonDecode(result.body);
+  // }
+
+  // /// Validates the authentication token.
+  // Future<Map<String, dynamic>> validateToken() async {
+  //   final endpoint = '/account/validate_auth';
+  //   final result = await _client.sendGetRequest(path: endpoint);
+
+  //   return jsonDecode(result.body);
+  // }
 
   // /// Deletes the current account.
   // Future<Map<String, dynamic>> delete({required String password}) async {
