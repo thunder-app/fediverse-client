@@ -1,6 +1,10 @@
 import 'dart:convert';
 
 import 'package:lemmy_dart_client/src/client/client.dart';
+import 'package:lemmy_dart_client/src/client/comment/comment.dart';
+import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
+import 'package:lemmy_dart_client/src/client/post/post.dart';
+import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
 
 /// This class defines a series of actions that can be performed on a given user.
 ///
@@ -26,80 +30,138 @@ class User {
   final LemmyClient _client;
 
   /// The user id.
-  final String? id;
+  int? id;
 
   /// The user username.
-  final String? username;
+  String? username;
 
   /// The internal user information. This should be updated whenever the user information changes.
   Map<String, dynamic>? _user;
 
   /// Private constructor for creating a User instance.
-  User._(this._client, {this.id, this.username}) : assert((id == null) != (username == null), 'Exactly one of id or username must be provided');
+  User._(this._client);
 
-  /// Initializes a new user with the given id or username and fetches its information.
-  /// Either [id] or [username] must be provided, but not both.
-  static Future<User> initialize(LemmyClient client, {String? id, String? username}) async {
-    final user = User._(client, id: id, username: username);
-    await user.info();
-    return user;
+  /// Initializes a new user instance.
+  /// If [id] or [username] is provided, the user information will be fetched from the API.
+  ///
+  /// If [user] is provided, the user information will be used instead of fetching it from the API.
+  static Future<User> initialize(LemmyClient client, {int? id, String? username, Map<String, dynamic>? user}) async {
+    final instance = User._(client);
+
+    // If the user information is pre-fetched, use it.
+    if (user != null && user.containsKey('person_view')) {
+      instance._user = user;
+      instance.id = user['person_view']['person']['id'];
+      instance.username = user['person_view']['person']['name'];
+      return instance;
+    }
+
+    // Otherwise, fetch the user information from its id or username.
+    assert((id == null) != (username == null), 'Exactly one of id or username must be provided');
+    instance.id = id;
+    instance.username = username;
+
+    await instance.info();
+    instance.id = instance._user?['person_view']['person']['id'];
+    instance.username = instance._user?['person_view']['person']['name'];
+
+    return instance;
   }
 
   /// Fetches the information of the given user.
-  Future<Map<String, dynamic>> info() async {
+  Future<Map<String, dynamic>> info({bool refresh = false}) async {
+    if (!refresh && _user != null) return _user!;
+
     final endpoint = '/person';
 
-    final result = await _client.sendGetRequest(path: endpoint, body: {
-      if (id != null) 'person_id': id,
-      if (username != null) 'username': username,
-    });
+    final result = await _client.sendGetRequest(
+      path: endpoint,
+      body: {
+        'person_id': id,
+        'name': username,
+      },
+    );
 
-    // Store the user information for later use.
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    // Update the internal user information.
     _user = jsonDecode(result.body);
     return _user!;
   }
 
-  /// Fetches the posts for the given user.
-  Future<Map<String, dynamic>> posts({
+  /// Gets the current user's posts.
+  Future<PostListResult> posts({
     String? sort,
     int? limit,
-    bool? saved,
     String? cursor,
   }) async {
-    final userId = _user?['person_view']['person']['id'];
-
     final endpoint = '/person/content';
-    final result = await _client.sendGetRequest(path: endpoint, body: {
-      'type_': "Posts",
-      'person_id': userId,
-      'sort': sort,
-      'limit': limit,
-      'saved_only': saved,
-      'page_cursor': cursor,
-    });
 
-    return jsonDecode(result.body);
+    final response = await _client.sendGetRequest(
+      path: endpoint,
+      body: {
+        'type_': "Posts",
+        'person_id': id,
+        'sort': sort,
+        'limit': limit,
+        'page_cursor': cursor,
+      },
+    );
+
+    if (response.statusCode != 200) throw Exception(jsonDecode(response.body)['error']);
+
+    final result = jsonDecode(response.body);
+    final postsData = result['content'] as List<dynamic>;
+
+    final posts = await Future.wait(
+      postsData.map((post) async {
+        final postId = post['post']['id'] as int;
+        return Post.initialize(_client, id: postId, post: {'post_view': post});
+      }),
+    );
+
+    return PostListResult(
+      posts: posts,
+      nextCursor: result['next_cursor'],
+      prevCursor: result['prev_cursor'],
+    );
   }
 
-  /// Fetches the comments for the given user.
-  Future<Map<String, dynamic>> comments({
+  /// Gets the current user's comments.
+  Future<CommentListResult> comments({
     String? sort,
     int? limit,
-    bool? saved,
     String? cursor,
   }) async {
-    final userId = _user?['person_view']['person']['id'];
-
     final endpoint = '/person/content';
-    final result = await _client.sendGetRequest(path: endpoint, body: {
-      'type_': "Comments",
-      'person_id': userId,
-      'sort': sort,
-      'limit': limit,
-      'saved_only': saved,
-      'page_cursor': cursor,
-    });
 
-    return jsonDecode(result.body);
+    final response = await _client.sendGetRequest(
+      path: endpoint,
+      body: {
+        'type_': "Comments",
+        'person_id': id,
+        'sort': sort,
+        'limit': limit,
+        'page_cursor': cursor,
+      },
+    );
+
+    if (response.statusCode != 200) throw Exception(jsonDecode(response.body)['error']);
+
+    final result = jsonDecode(response.body);
+    final commentsData = result['content'] as List<dynamic>;
+
+    final comments = await Future.wait(
+      commentsData.map((comment) async {
+        final commentId = comment['comment']['id'] as int;
+        return Comment.initialize(_client, id: commentId, comment: {'comment_view': comment});
+      }),
+    );
+
+    return CommentListResult(
+      comments: comments,
+      nextCursor: result['next_cursor'],
+      prevCursor: result['prev_cursor'],
+    );
   }
 }

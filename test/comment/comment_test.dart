@@ -38,6 +38,19 @@ void main() {
       });
     });
 
+    group('edit() method', () {
+      test('should return the edited comment', () async {
+        final comment = await client.comment(id: commentId!);
+
+        final editContent = generateRandomString(10);
+        final result = await comment.edit(content: editContent);
+        expect(result, isA<Comment>());
+
+        final info = await result.info();
+        expect(info['comment_view']['comment']['content'], editContent);
+      });
+    });
+
     group('reply() method', () {
       test('should return the reply', () async {
         final content = generateRandomString(10);
@@ -86,6 +99,95 @@ void main() {
 
         final info = await result.info();
         expect(info['comment_view']['comment']['deleted'], false);
+      });
+    });
+
+    group('remove() method', () {
+      test('should return the removed comment', () async {
+        final comment = await client.comment(id: commentId!);
+        final result = await comment.remove(reason: 'Test reason');
+        expect(result, isA<Comment>());
+
+        final info = await result.info();
+        expect(info['comment_view']['comment']['removed'], true);
+      });
+    });
+
+    group('recover() method', () {
+      test('should return the recovered comment', () async {
+        final comment = await client.comment(id: commentId!);
+        await comment.remove(reason: 'Test reason');
+
+        final result = await comment.recover(reason: 'Test reason');
+        expect(result, isA<Comment>());
+
+        final info = await result.info();
+        expect(info['comment_view']['comment']['removed'], false);
+      });
+    });
+
+    group('vote() method', () {
+      test('should return the voted comment', () async {
+        final comment = await client.comment(id: commentId!);
+        final result = await comment.vote(score: 1);
+        expect(result, isA<Comment>());
+
+        Map<String, dynamic> info = await result.info();
+        expect(info['comment_view']['comment']['score'], 1);
+
+        // Vote again with a different score
+        final result2 = await comment.vote(score: -1);
+        expect(result2, isA<Comment>());
+
+        info = await result2.info();
+        expect(info['comment_view']['comment']['score'], -1);
+      });
+    });
+
+    group('save() method', () {
+      test('should return the saved comment', () async {
+        final comment = await client.comment(id: commentId!);
+        final result = await comment.save();
+        expect(result, isA<Comment>());
+
+        final info = await result.info();
+        expect(info['comment_view']['comment_actions']['saved'], isNot(null));
+      });
+
+      test('should return the unsaved comment', () async {
+        final comment = await client.comment(id: commentId!);
+        await comment.save();
+
+        final result = await comment.unsave();
+        expect(result, isA<Comment>());
+
+        final info = await result.info();
+        expect(info['comment_view']['comment_actions']['saved'], null);
+      });
+    });
+
+    // TODO: Fix this test - should create a comment reply first
+    // Create a comment from the current user
+    // Create a reply to the comment from a different user
+    group('read() method', () {
+      test('should return the read comment reply', () async {
+        final comment = await client.comment(id: commentId!);
+        final result = await comment.read();
+        expect(result, isA<Comment>());
+
+        final info = await result.info();
+        expect(info['comment_view']['comment_actions']['read'], isNot(null));
+      });
+
+      test('should return the unread comment reply', () async {
+        final comment = await client.comment(id: commentId!);
+        await comment.read();
+
+        final result = await comment.unread();
+        expect(result, isA<Comment>());
+
+        final info = await result.info();
+        expect(info['comment_view']['comment_actions']['read'], null);
       });
     });
   });

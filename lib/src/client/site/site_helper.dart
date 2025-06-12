@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:lemmy_dart_client/src/client/client.dart';
+import 'package:lemmy_dart_client/src/client/post/post.dart';
 import 'package:lemmy_dart_client/src/client/site/site.dart';
 
 /// This class defines a series of actions that can be performed on the current site.
@@ -47,7 +48,47 @@ class SiteHelper {
     final endpoint = '/site';
     final result = await _client.sendGetRequest(path: endpoint);
 
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
     return jsonDecode(result.body);
+  }
+
+  /// Pins the given post to the top of the instance.
+  Future<Post> pin({required int postId}) async {
+    final endpoint = '/post/feature';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': postId,
+        'featured': true,
+        'feature_type': 'Local',
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: postId, post: response);
+  }
+
+  /// Unpins the given post from the top of the instance.
+  Future<Post> unpin({required int postId}) async {
+    final endpoint = '/post/feature';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': postId,
+        'featured': false,
+        'feature_type': 'Local',
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: postId, post: response);
   }
 
   // /// Fetches the federated instances of the current site.

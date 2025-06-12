@@ -26,4 +26,42 @@ class PostHelper {
   PostHelper(this._client);
 
   Future<Post> call({int? id, Map<String, dynamic>? post}) => Post.initialize(_client, id: id, post: post);
+
+  /// Resolves a given post report.
+  /// TODO: Fix return type - it returns a post report instead of a post
+  // Future<Post> resolve({required int reportId}) async {
+  //   final endpoint = '/post/report/resolve';
+
+  //   final result = await _client.sendPutRequest(
+  //     path: endpoint,
+  //     body: {
+  //       'report_id': reportId,
+  //       'resolved': true,
+  //     },
+  //   );
+
+  //   if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+  //   final response = jsonDecode(result.body);
+  //   return Post.initialize(_client, id: id, post: response);
+  // }
+
+  /// Unresolves a given post report.
+  /// TODO: Fix return type - it returns a post report instead of a post
+  // Future<Post> unresolve({required int reportId}) async {
+  //   final endpoint = '/post/report/resolve';
+
+  //   final result = await _client.sendPutRequest(
+  //     path: endpoint,
+  //     body: {
+  //       'report_id': reportId,
+  //       'resolved': false,
+  //     },
+  //   );
+
+  //   if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+  //   final response = jsonDecode(result.body);
+  //   return Post.initialize(_client, id: id, post: response);
+  // }
 }

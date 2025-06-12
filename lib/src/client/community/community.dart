@@ -211,6 +211,44 @@ class Community {
     );
   }
 
+  /// Pins the given post to the top of the community.
+  Future<Post> pin({required int postId}) async {
+    final endpoint = '/post/feature';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': postId,
+        'featured': true,
+        'feature_type': 'Community',
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: postId, post: response);
+  }
+
+  /// Unpins the given post from the top of the community.
+  Future<Post> unpin({required int postId}) async {
+    final endpoint = '/post/feature';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': postId,
+        'featured': false,
+        'feature_type': 'Community',
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: postId, post: response);
+  }
+
   // /// Edits the given community.
   // Future<Map<String, dynamic>> edit({
   //   String? title,

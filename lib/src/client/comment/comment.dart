@@ -71,6 +71,28 @@ class Comment {
     return _comment!;
   }
 
+  /// Edits the given comment.
+  Future<Comment> edit({
+    String? content,
+    int? languageId,
+  }) async {
+    final endpoint = '/comment';
+
+    final result = await _client.sendPutRequest(
+      path: endpoint,
+      body: {
+        'comment_id': id,
+        'content': content,
+        'language_id': languageId,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final comment = jsonDecode(result.body);
+    return Comment.initialize(_client, comment: comment);
+  }
+
   /// Submits a new reply to a given comment.
   Future<Comment> reply({
     required String content,
@@ -160,6 +182,134 @@ class Comment {
       body: {
         'comment_id': id,
         'deleted': false,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Comment.initialize(_client, id: id, comment: response);
+  }
+
+  /// Removes the given comment. This is a moderator action.
+  Future<Comment> remove({required String reason}) async {
+    final endpoint = '/comment/remove';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'comment_id': id,
+        'removed': true,
+        'reason': reason,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Comment.initialize(_client, id: id, comment: response);
+  }
+
+  /// Recovers a previously removed comment. This is a moderator action.
+  Future<Comment> recover({required String reason}) async {
+    final endpoint = '/comment/remove';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'comment_id': id,
+        'removed': false,
+        'reason': reason,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Comment.initialize(_client, id: id, comment: response);
+  }
+
+  /// Vote on the given comment.
+  Future<Comment> vote({required int score}) async {
+    final endpoint = '/comment/like';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'comment_id': id,
+        'score': score,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Comment.initialize(_client, id: id, comment: response);
+  }
+
+  /// Saves the given comment.
+  Future<Comment> save() async {
+    final endpoint = '/comment/save';
+
+    final result = await _client.sendPutRequest(
+      path: endpoint,
+      body: {
+        'comment_id': id,
+        'save': true,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Comment.initialize(_client, id: id, comment: response);
+  }
+
+  /// Unsaves the given comment.
+  Future<Comment> unsave() async {
+    final endpoint = '/comment/save';
+
+    final result = await _client.sendPutRequest(
+      path: endpoint,
+      body: {
+        'comment_id': id,
+        'save': false,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Comment.initialize(_client, id: id, comment: response);
+  }
+
+  /// Reads the given comment. This is only available for comment replies.
+  Future<Comment> read() async {
+    final endpoint = '/comment/mark_as_read';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'comment_reply_id': id,
+        'read': true,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Comment.initialize(_client, id: id, comment: response);
+  }
+
+  /// Unreads the given comment. This is only available for comment replies.
+  Future<Comment> unread() async {
+    final endpoint = '/comment/mark_as_read';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'comment_reply_id': id,
+        'read': false,
       },
     );
 

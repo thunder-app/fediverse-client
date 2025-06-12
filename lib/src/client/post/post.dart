@@ -72,6 +72,42 @@ class Post {
     return _post!;
   }
 
+  /// Edits the given post.
+  Future<Post> edit({
+    String? name,
+    String? url,
+    String? body,
+    String? altText,
+    bool? nsfw,
+    int? languageId,
+    String? thumbnailUrl,
+    List<int>? tags,
+    DateTime? scheduledAt,
+  }) async {
+    final endpoint = '/post';
+
+    final result = await _client.sendPutRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'name': name,
+        'url': url,
+        'body': body,
+        'alt_text': body,
+        'nsfw': nsfw,
+        'language_id': languageId,
+        'custom_thumbnail': thumbnailUrl,
+        'tags': tags,
+        if (scheduledAt != null) 'scheduled_publish_time': scheduledAt.millisecondsSinceEpoch ~/ 1000,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
   /// Submits a new reply (comment) to the given post.
   Future<Comment> reply({
     required String content,
@@ -167,32 +203,226 @@ class Post {
     return Post.initialize(_client, id: id, post: response);
   }
 
-  // /// Edits the given post.
-  // Future<Map<String, dynamic>> edit({
-  //   String? name,
-  //   String? url,
-  //   String? body,
-  //   String? altText,
-  //   bool? nsfw,
-  //   int? languageId,
-  //   String? thumbnailUrl,
-  //   List<int>? tags,
-  //   DateTime? scheduledAt,
-  // }) async {
-  //   final endpoint = '/post';
-  //   final result = await _client.sendPutRequest(path: endpoint, body: {
-  //     'post_id': id,
-  //     'name': name,
-  //     'url': url,
-  //     'body': body,
-  //     'alt_text': body,
-  //     'nsfw': nsfw,
-  //     'language_id': languageId,
-  //     'custom_thumbnail': thumbnailUrl,
-  //     'tags': tags,
-  //     if (scheduledAt != null) 'scheduled_publish_time': scheduledAt.millisecondsSinceEpoch ~/ 1000,
-  //   });
+  /// Removes the given post. This is a moderator action.
+  Future<Post> remove({required String reason}) async {
+    final endpoint = '/post/remove';
 
-  //   return jsonDecode(result.body);
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'removed': true,
+        'reason': reason,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Recovers a previously removed post. This is a moderator action.
+  Future<Post> recover({required String reason}) async {
+    final endpoint = '/post/remove';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'removed': false,
+        'reason': reason,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Votes on the given post.
+  Future<Post> vote({
+    required int score,
+  }) async {
+    final endpoint = '/post/like';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'score': score,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Saves the given post.
+  Future<Post> save() async {
+    final endpoint = '/post/save';
+
+    final result = await _client.sendPutRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'save': true,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Unsaves the given post.
+  Future<Post> unsave() async {
+    final endpoint = '/post/save';
+
+    final result = await _client.sendPutRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'save': false,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Reads the given post.
+  Future<Post> read() async {
+    final endpoint = '/post/mark_as_read';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'read': true,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Unreads the given post.
+  Future<Post> unread() async {
+    final endpoint = '/post/mark_as_read';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'read': false,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Hides the given post.
+  Future<Post> hide() async {
+    final endpoint = '/post/hide';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'hide': true,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Unhides the given post.
+  Future<Post> unhide() async {
+    final endpoint = '/post/hide';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'hide': false,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Locks the given post.
+  Future<Post> lock({String? reason}) async {
+    final endpoint = '/post/lock';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'locked': true,
+        'reason': reason,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Unlocks the given post.
+  Future<Post> unlock({String? reason}) async {
+    final endpoint = '/post/lock';
+
+    final result = await _client.sendPostRequest(
+      path: endpoint,
+      body: {
+        'post_id': id,
+        'locked': false,
+        'reason': reason,
+      },
+    );
+
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+    final response = jsonDecode(result.body);
+    return Post.initialize(_client, id: id, post: response);
+  }
+
+  /// Reports the given post.
+  /// TODO: Fix return type - it returns a post report instead of a post
+  // Future<Post> report({required String reason}) async {
+  //   final endpoint = '/post/report';
+
+  //   final result = await _client.sendPostRequest(
+  //     path: endpoint,
+  //     body: {
+  //       'post_id': id,
+  //       'reason': reason,
+  //     },
+  //   );
+
+  //   if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
+  //   final response = jsonDecode(result.body);
+  //   return Post.initialize(_client, id: id, post: response);
   // }
 }

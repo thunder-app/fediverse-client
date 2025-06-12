@@ -140,6 +140,34 @@ void main() {
       });
     });
 
+    group('pin() method', () {
+      test('should return the pinned post', () async {
+        final community = await client.community(name: communityName);
+        final post = await community.submit(name: 'Test Post ${generateRandomString(10)}', url: 'https://example.com', body: 'This is a test post');
+
+        final result = await community.pin(postId: post.id!);
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post']['featured_community'], true);
+      });
+    });
+
+    group('unpin() method', () {
+      test('should return the unpinned post', () async {
+        final community = await client.community(name: communityName);
+        final post = await community.submit(name: 'Test Post ${generateRandomString(10)}', url: 'https://example.com', body: 'This is a test post');
+
+        await community.pin(postId: post.id!);
+
+        final result = await community.unpin(postId: post.id!);
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post']['featured_community'], false);
+      });
+    });
+
     // group('edit() method', () {
     //   test('should return the edited community', () async {
     //     await client.account.login(username: username, password: password);

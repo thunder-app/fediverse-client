@@ -37,6 +37,20 @@ void main() {
       });
     });
 
+    group('edit() method', () {
+      test('should return the edited post', () async {
+        final post = await client.post(id: postId!);
+
+        final editName = generateRandomString(10);
+        final result = await post.edit(name: editName);
+
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post']['name'], editName);
+      });
+    });
+
     group('reply() method', () {
       test('should return the reply', () async {
         final post = await client.post(id: postId!);
@@ -88,6 +102,138 @@ void main() {
 
         final info = await result.info();
         expect(info['post_view']['post']['deleted'], false);
+      });
+    });
+
+    group('remove() method', () {
+      test('should return the removed post', () async {
+        final post = await client.post(id: postId!);
+        final result = await post.remove(reason: 'Test reason');
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post']['removed'], true);
+      });
+    });
+
+    group('recover() method', () {
+      test('should return the recovered post', () async {
+        final post = await client.post(id: postId!);
+        await post.remove(reason: 'Test reason');
+
+        final result = await post.recover(reason: 'Test reason');
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post']['removed'], false);
+      });
+    });
+
+    group('vote() method', () {
+      test('should return the voted post', () async {
+        final post = await client.post(id: postId!);
+        final result = await post.vote(score: 1);
+        expect(result, isA<Post>());
+
+        Map<String, dynamic> info = await result.info();
+        expect(info['post_view']['post']['score'], 1);
+
+        // Vote again with a different score
+        final result2 = await post.vote(score: -1);
+        expect(result2, isA<Post>());
+
+        info = await result2.info();
+        expect(info['post_view']['post']['score'], -1);
+      });
+    });
+
+    group('save() method', () {
+      test('should return the saved post', () async {
+        final post = await client.post(id: postId!);
+        final result = await post.save();
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post_actions']['saved'], isNot(null));
+      });
+
+      test('should return the unsaved post', () async {
+        final post = await client.post(id: postId!);
+        await post.save();
+
+        final result = await post.unsave();
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post_actions']['saved'], null);
+      });
+    });
+
+    group('read() method', () {
+      test('should return the read post', () async {
+        final post = await client.post(id: postId!);
+        final result = await post.read();
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post_actions']['read'], isNot(null));
+      });
+
+      test('should return the unread post', () async {
+        final post = await client.post(id: postId!);
+        await post.read();
+
+        final result = await post.unread();
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post_actions']['read'], null);
+      });
+    });
+
+    group('hide() method', () {
+      test('should return the hidden post', () async {
+        final post = await client.post(id: postId!);
+        final result = await post.hide();
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post_actions']['hidden'], isNot(null));
+      });
+
+      test('should return the unhidden post', () async {
+        final post = await client.post(id: postId!);
+        await post.hide();
+
+        final result = await post.unhide();
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post_actions']['hidden'], null);
+      });
+    });
+
+    group('lock() method', () {
+      test('should return the locked post', () async {
+        final post = await client.post(id: postId!);
+        final result = await post.lock(reason: 'Test reason');
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post']['locked'], true);
+      });
+    });
+
+    group('unlock() method', () {
+      test('should return the unlocked post', () async {
+        final post = await client.post(id: postId!);
+        await post.lock(reason: 'Test reason');
+
+        final result = await post.unlock(reason: 'Test reason');
+        expect(result, isA<Post>());
+
+        final info = await result.info();
+        expect(info['post_view']['post']['locked'], false);
       });
     });
 

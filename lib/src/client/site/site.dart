@@ -29,6 +29,8 @@ class Site {
     final endpoint = '/post/site_metadata';
     final result = await _client.sendGetRequest(path: endpoint, body: {'url': instance});
 
+    if (result.statusCode != 200) throw Exception(jsonDecode(result.body)['error']);
+
     return jsonDecode(result.body);
   }
 }

@@ -7,5 +7,5 @@ class UserHelper {
 
   UserHelper(this._client);
 
-  Future<User> call({String? id, String? username}) => User.initialize(_client, id: id, username: username);
+  Future<User> call({int? id, String? username}) => User.initialize(_client, id: id, username: username);
 }

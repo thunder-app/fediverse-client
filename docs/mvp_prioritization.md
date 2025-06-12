@@ -15,7 +15,7 @@ Essential endpoints needed for any user interaction with a Lemmy instance.
 - [ ] `GET /account/validate_auth` - Validate auth tokens (client.account.validateToken())
 
 ### User and Instance Information
-- [ ] `GET /site` - Get instance info and user data (client.site.info())
+- [x] `GET /site` - Get instance info and user data (client.site.info())
 - [ ] `GET /federated_instances` - See federated instances (client.federation.instances())
 - [x] `GET /account` - Get current user data (client.account.info())
 
@@ -46,13 +46,13 @@ Core endpoints for creating posts and comments to populate the instance with con
 
 ### Post Creation & Management
 - [x] `POST /post` - Create new posts (client.community(id).submit())
-- [ ] `PUT /post` - Edit posts (client.post(id).edit())
+- [x] `PUT /post` - Edit posts (client.post(id).edit())
 - [x] `POST /post/delete` - Delete own posts (client.post(id).delete(), client.post(id).restore())
-- [ ] `GET /post/site_metadata` - Fetch URL metadata for link posts (client.site.metadata())
+- [x] `GET /post/site_metadata` - Fetch URL metadata for link posts (client.site.metadata())
 
 ### Comment Creation & Replies
 - [x] `POST /comment` - Create comments and replies (client.post(id).reply(), client.comment(id).reply())
-- [ ] `PUT /comment` - Edit comments (client.comment(id).edit())
+- [x] `PUT /comment` - Edit comments (client.comment(id).edit())
 - [x] `POST /comment/delete` - Delete own comments (client.comment(id).delete(), client.comment(id).restore())
 
 ### Basic Media Support
@@ -68,14 +68,14 @@ Core endpoints for creating posts and comments to populate the instance with con
 Essential endpoints for browsing and discovering the content that's been created.
 
 ### Content Browsing
-- [PARTIAL] `GET /post/list` - Browse posts with filters (client.account.posts(), client.feed.posts(), client.community(id).posts())
+- [x] `GET /post/list` - Browse posts with filters (client.account.posts(), client.feed.posts(), client.community(id).posts())
 - [x] `GET /post` - Fetch individual posts (client.post(id).info())
 - [x] `GET /comment/list` - Get comments for posts (client.post(id).comments(), client.comment(id).replies())
 - [x] `GET /comment` - Fetch individual comments (client.comment(id).info())
 
 ### User Profiles & Activity
-- [ ] `GET /person` - View user profiles (client.user(id).info())
-- [ ] `GET /person/content` - View user's posts/comments (client.user(id).posts(), client.user(id).comments())
+- [x] `GET /person` - View user profiles (client.user(id).info())
+- [x] `GET /person/content` - View user's posts/comments (client.user(id).posts(), client.user(id).comments())
 
 ### Search & Moderation Transparency
 - [ ] `GET /search` - Search across instance (client.post.search(), client.comment.search(), client.community.search(), client.user.search())
@@ -95,15 +95,19 @@ Essential endpoints for browsing and discovering the content that's been created
 Endpoints for meaningful interaction with existing content.
 
 ### Voting & Reactions
-- [ ] `POST /post/like` - Vote on posts (client.post(id).vote())
-- [ ] `POST /comment/like` - Vote on comments (client.comment(id).vote())
+- [x] `POST /post/like` - Vote on posts (client.post(id).vote())
+- [x] `POST /comment/like` - Vote on comments (client.comment(id).vote())
 
-### Content Management
-- [ ] `PUT /post/save` - Save/unsave posts (client.post(id).save(), client.post(id).unsave())
-- [ ] `PUT /comment/save` - Save/unsave comments (client.comment(id).save(), client.comment(id).unsave())
-- [ ] `POST /post/mark_as_read` - Mark posts as read (client.post(id).read(), client.post(id).unread())
-- [ ] `POST /comment/mark_as_read` - Mark specific comments as read (client.comment(id).read(), client.comment(id).unread())
-- [ ] `POST /post/hide` - Hide posts from feeds (client.post(id).hide(), client.post(id).unhide())
+### Post Content Management
+- [x] `PUT /post/save` - Save/unsave posts (client.post(id).save(), client.post(id).unsave())
+- [x] `POST /post/lock` - Lock/unlock posts (client.post(id).lock(), client.post(id).unlock())
+- [x] `POST /post/mark_as_read` - Mark posts as read (client.post(id).read(), client.post(id).unread())
+- [x] `POST /post/hide` - Hide posts from feeds (client.post(id).hide(), client.post(id).unhide())
+- [x] `POST /post/feature` - Pin posts to community/instance (client.community(id).pin(), client.community(id).unpin(), client.site.pin(), client.site.unpin())
+
+### Comment Content Management
+- [x] `PUT /comment/save` - Save/unsave comments (client.comment(id).save(), client.comment(id).unsave())
+- [x] `POST /comment/mark_as_read` - Mark specific comments as read (client.comment(id).read(), client.comment(id).unread())
 
 ### Personal Content Views
 - [ ] `GET /account/saved` - View saved content (client.account.posts(saved: true), client.account.comments(saved: true))
