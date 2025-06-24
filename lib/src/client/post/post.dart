@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/comment/comment.dart';
+import 'package:fediverse_client/src/client/comment/comment_helper.dart';
 
 /// This class defines a series of actions that can be performed on a given post.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -19,7 +19,7 @@ import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
 /// ```
 class Post {
   /// The client instance.
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   /// The post id.
   int? id;
@@ -34,7 +34,7 @@ class Post {
   /// If [id] is provided, the post information will be fetched from the API.
   ///
   /// If [post] is provided, the post information will be used instead of fetching it from the API.
-  static Future<Post> initialize(LemmyClient client, {int? id, Map<String, dynamic>? post}) async {
+  static Future<Post> initialize(FediverseClient client, {int? id, Map<String, dynamic>? post}) async {
     final instance = Post._(client);
 
     // If the post information is pre-fetched, use it.

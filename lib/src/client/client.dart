@@ -2,20 +2,23 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'package:lemmy_dart_client/src/client/account/account_helper.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
-import 'package:lemmy_dart_client/src/client/community/community_helper.dart';
-import 'package:lemmy_dart_client/src/client/feed/feed_helper.dart';
-import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
-import 'package:lemmy_dart_client/src/client/site/site_helper.dart';
-import 'package:lemmy_dart_client/src/client/user/user_helper.dart';
+import 'package:fediverse_client/src/client/account/account_helper.dart';
+import 'package:fediverse_client/src/client/comment/comment_helper.dart';
+import 'package:fediverse_client/src/client/community/community_helper.dart';
+import 'package:fediverse_client/src/client/feed/feed_helper.dart';
+import 'package:fediverse_client/src/client/post/post_helper.dart';
+import 'package:fediverse_client/src/client/site/site_helper.dart';
+import 'package:fediverse_client/src/client/user/user_helper.dart';
+import 'package:fediverse_client/src/enums/platform.dart';
 
-/// A client that interacts with a Lemmy instance. The client must be initialized before it can be used.
+/// A client that interacts with a Fediverse (Lemmy, PieFed, etc.) instance. The client must be initialized before it can be used.
 /// When performing a request, the client will return a Map of the JSON response.
+///
+/// This client primarily targets threadiverse instances (Lemmy, PieFed, etc.).
 ///
 /// Example:
 /// ```dart
-/// final client = LemmyClient.initialize(
+/// final client = FediverseClient.initialize(
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 ///   version: 'v3',
@@ -24,62 +27,59 @@ import 'package:lemmy_dart_client/src/client/user/user_helper.dart';
 ///
 /// final siteInformation = client.site.info;
 /// ```
-class LemmyClient {
-  /// The HTTP client to use when interacting with the Lemmy instance.
+class FediverseClient {
+  /// The platform of the Fediverse instance.
+  final Platform platform;
+
+  /// The HTTP client to use when interacting with the Fediverse instance.
   final http.Client httpClient = http.Client();
 
-  /// The scheme to use when interacting with the Lemmy instance. Defaults to 'https'.
+  /// The scheme to use when interacting with the Fediverse instance. Defaults to 'https'.
   /// Should be one of 'http' or 'https'.
   final String scheme;
 
-  /// The URL of the Lemmy instance, excluding the scheme.
+  /// The URL of the Fediverse instance, excluding the scheme.
   /// For example, 'lemmy.world' or 'lemmy.ml'.
   late String host;
 
-  /// The version of the Lemmy API to use. Defaults to 'v4'.
+  /// The version of the Fediverse API to use. Defaults to 'v4'.
   /// Available versions are 'v3' and 'v4'.
   final String version;
 
-  /// The port to use when interacting with the Lemmy instance.
+  /// The port to use when interacting with the Fediverse instance.
   /// Should only be used during development.
   late int? port;
 
   /// The authentication token for the current client instance.
-  /// This is used to authenticate requests to the Lemmy instance as a given user.
+  /// This is used to authenticate requests to the Fediverse instance as a given user.
   String? auth;
 
   /// The user agent string to send with all HTTP requests.
   final String userAgent;
 
   /// Interface to work with [SiteHelper] instances.
-  /// This is used to interact with the site information of the a Lemmy instance.
   late final SiteHelper site;
 
   /// Interface to work with [FeedHelper] instances.
-  /// This is used to interact with the feed information of the a Lemmy instance.
   late final FeedHelper feed;
 
   /// Interface to work with [CommunityHelper] instances.
-  /// This is used to interact with the community information of the a Lemmy instance.
   late final CommunityHelper community;
 
   /// Interface to work with [AccountHelper] instances.
-  /// This is used to interact with the account information of the a Lemmy instance.
   late final AccountHelper account;
 
   /// Interface to work with [PostHelper] instances.
-  /// This is used to interact with the post information of the a Lemmy instance.
   late final PostHelper post;
 
   /// Interface to work with [CommentHelper] instances.
-  /// This is used to interact with the comment information of the a Lemmy instance.
   late final CommentHelper comment;
 
   /// Interface to work with [UserHelper] instances.
-  /// This is used to interact with the user information of the a Lemmy instance.
   late final UserHelper user;
 
-  LemmyClient._({
+  FediverseClient._({
+    required this.platform,
     required this.host,
     required this.scheme,
     required this.version,
@@ -110,7 +110,8 @@ class LemmyClient {
   ///
   /// When the client is initialized, we also fetch the instance's site information.
   /// If the [auth] parameter is passed in, we also fetch the account information.
-  static Future<LemmyClient> initialize({
+  static Future<FediverseClient> initialize({
+    Platform platform = Platform.lemmy,
     String instance = 'lemmy.thunderapp.dev',
     String scheme = 'https',
     String version = 'v3',
@@ -119,11 +120,12 @@ class LemmyClient {
   }) async {
     // Perform some basic assertions to ensure the parameters are valid.
     assert(instance.isNotEmpty && !instance.contains('http'));
-    assert(version == 'v3' || version == 'v4');
+    assert(version == 'v3' || version == 'v4' || version == 'alpha');
     assert(scheme == 'http' || scheme == 'https');
     assert(userAgent.isNotEmpty);
 
-    final client = LemmyClient._(
+    final client = FediverseClient._(
+      platform: platform,
       host: instance,
       scheme: scheme,
       version: version,
@@ -163,7 +165,7 @@ class LemmyClient {
         queryParameters: queryParameters,
       ),
       headers: {
-        'Authorization': 'Bearer $auth',
+        if (auth != null) 'Authorization': 'Bearer $auth',
         'User-Agent': userAgent,
       },
     );

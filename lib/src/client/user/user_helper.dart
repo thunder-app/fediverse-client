@@ -1,9 +1,9 @@
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/user/user.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/user/user.dart';
 
 /// This class defines a series of actions that can be performed on a user.
 class UserHelper {
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   UserHelper(this._client);
 

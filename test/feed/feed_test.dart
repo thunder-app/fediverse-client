@@ -1,16 +1,16 @@
 import 'package:test/test.dart';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/post/post_helper.dart';
 
-import '../config.dart';
+import '../config.lemmy.dart';
 
 void main() {
   group('Feed tests', () {
-    late LemmyClient client;
+    late FediverseClient client;
 
     setUp(() async {
-      client = await LemmyClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
+      client = await FediverseClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
     });
 
     group('posts() method', () {

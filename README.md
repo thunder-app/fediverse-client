@@ -1,4 +1,4 @@
-# Lemmy Dart API Client
+# Fediverse Dart API Client
 
 <div align="center">
 <img width=200px height=200px src="https://raw.githubusercontent.com/LemmurOrg/lemmy_dart_client/master/logo.svg"/>
@@ -19,7 +19,7 @@ Notice: While efforts are made to keep as much parity as possible with the Lemmy
 ## Usage
 
 ```dart
-import 'package:lemmy_dart_client/v3.dart';
+import 'package:fediverse_client/v3.dart';
 
 Future<void> main() async {
   // Initialize the Lemmy API Client with the given instance URI

@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/comment/comment_helper.dart';
 
 /// This class defines a series of actions that can be performed on a given comment.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -18,7 +18,7 @@ import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
 /// ```
 class Comment {
   /// The client instance.
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   /// The comment id.
   int? id;
@@ -33,7 +33,7 @@ class Comment {
   /// If [id] is provided, the comment information will be fetched from the API.
   ///
   /// If [comment] is provided, the comment information will be used instead of fetching it from the API.
-  static Future<Comment> initialize(LemmyClient client, {int? id, Map<String, dynamic>? comment}) async {
+  static Future<Comment> initialize(FediverseClient client, {int? id, Map<String, dynamic>? comment}) async {
     final instance = Comment._(client);
 
     // If the comment information is pre-fetched, use it.

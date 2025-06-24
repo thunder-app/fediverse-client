@@ -1,7 +1,7 @@
-name: lemmy_dart_client
-description: Dart client for Lemmy API
+name: fediverse_client
+description: Dart client for Fediverse API
 version: 1.0.0
-repository: https://github.com/thunder-app/lemmy_dart_client
+repository: https://github.com/thunder-app/fediverse_dart_client
 
 environment:
   sdk: ^3.6.0

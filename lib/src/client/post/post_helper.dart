@@ -1,5 +1,5 @@
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/post/post.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/post/post.dart';
 
 /// Result class for post list operations containing posts and pagination cursors.
 class PostListResult {
@@ -21,7 +21,7 @@ class PostListResult {
 
 /// This class defines a series of actions that can be performed on a post.
 class PostHelper {
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   PostHelper(this._client);
 

@@ -1,5 +1,5 @@
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/comment/comment.dart';
 
 /// Result class for comment list operations containing comments and pagination cursors.
 class CommentListResult {
@@ -21,7 +21,7 @@ class CommentListResult {
 
 /// This class defines a series of actions that can be performed on a comment.
 class CommentHelper {
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   CommentHelper(this._client);
 

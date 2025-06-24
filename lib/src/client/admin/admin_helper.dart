@@ -1,19 +1,19 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/client.dart';
 
 /// This class defines a series of actions that can be performed by an admin of the site.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
 ///
 /// ```
 class AdminHelper {
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   AdminHelper(this._client);
 

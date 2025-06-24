@@ -1,14 +1,14 @@
 import 'package:test/test.dart';
 
-import 'package:lemmy_dart_client/lemmy_dart_client.dart';
+import 'package:fediverse_client/fediverse_client.dart';
 
-import 'config.dart';
+import 'config.lemmy.dart';
 
 void main() {
-  late LemmyClient client;
+  late FediverseClient client;
 
   setUp(() async {
-    client = await LemmyClient.initialize(
+    client = await FediverseClient.initialize(
       instance: instance,
       scheme: scheme,
       version: version,
@@ -16,7 +16,7 @@ void main() {
     );
   });
 
-  group('LemmyClient', () {
+  group('FediverseClient', () {
     test('initializes successfully', () {
       expect(client, isNotNull);
       expect(client.host, equals(instance));

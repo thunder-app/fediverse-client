@@ -7,6 +7,7 @@
 pubspec.lock
 
 # Contains credentials for tests
-test/config.dart
+test/config.lemmy.dart
+test/config.piefed.dart
 
 docker/volumes/

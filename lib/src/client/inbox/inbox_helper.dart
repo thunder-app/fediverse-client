@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/inbox/inbox.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/inbox/inbox.dart';
 
 /// This class defines a series of actions that can be performed on the current site.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -16,7 +16,7 @@ import 'package:lemmy_dart_client/src/client/inbox/inbox.dart';
 /// await client.account.inbox();
 /// ```
 class InboxHelper {
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   InboxHelper(this._client);
 

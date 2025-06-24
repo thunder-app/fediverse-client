@@ -1,17 +1,17 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
-import 'package:lemmy_dart_client/src/client/post/post.dart';
-import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
-import 'package:lemmy_dart_client/src/client/inbox/inbox_helper.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/comment/comment.dart';
+import 'package:fediverse_client/src/client/comment/comment_helper.dart';
+import 'package:fediverse_client/src/client/post/post.dart';
+import 'package:fediverse_client/src/client/post/post_helper.dart';
+import 'package:fediverse_client/src/client/inbox/inbox_helper.dart';
 
 /// This class defines a series of actions that can be performed on the current account.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -41,7 +41,7 @@ import 'package:lemmy_dart_client/src/client/inbox/inbox_helper.dart';
 /// await client.account.comments();
 /// ```
 class AccountHelper {
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   AccountHelper(this._client);
 
@@ -60,7 +60,7 @@ class AccountHelper {
   /// Initializes a new account helper instance.
   ///
   /// If [account] is provided, the account information will be used instead of fetching it from the API.
-  static Future<AccountHelper> initialize(LemmyClient client, {Map<String, dynamic>? account}) async {
+  static Future<AccountHelper> initialize(FediverseClient client, {Map<String, dynamic>? account}) async {
     final instance = AccountHelper._(client);
 
     // If the account information is pre-fetched, use it.

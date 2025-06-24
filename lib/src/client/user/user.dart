@@ -1,16 +1,16 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
-import 'package:lemmy_dart_client/src/client/post/post.dart';
-import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/comment/comment.dart';
+import 'package:fediverse_client/src/client/comment/comment_helper.dart';
+import 'package:fediverse_client/src/client/post/post.dart';
+import 'package:fediverse_client/src/client/post/post_helper.dart';
 
 /// This class defines a series of actions that can be performed on a given user.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -27,7 +27,7 @@ import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
 /// ```
 class User {
   /// The client instance.
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   /// The user id.
   int? id;
@@ -45,7 +45,7 @@ class User {
   /// If [id] or [username] is provided, the user information will be fetched from the API.
   ///
   /// If [user] is provided, the user information will be used instead of fetching it from the API.
-  static Future<User> initialize(LemmyClient client, {int? id, String? username, Map<String, dynamic>? user}) async {
+  static Future<User> initialize(FediverseClient client, {int? id, String? username, Map<String, dynamic>? user}) async {
     final instance = User._(client);
 
     // If the user information is pre-fetched, use it.

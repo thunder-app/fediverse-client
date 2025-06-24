@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/post/post.dart';
-import 'package:lemmy_dart_client/src/client/site/site.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/post/post.dart';
+import 'package:fediverse_client/src/client/site/site.dart';
 
 /// This class defines a series of actions that can be performed on the current site.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -35,7 +35,7 @@ import 'package:lemmy_dart_client/src/client/site/site.dart';
 /// await client.site.imageHealth();
 /// ```
 class SiteHelper {
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   SiteHelper(this._client);
 

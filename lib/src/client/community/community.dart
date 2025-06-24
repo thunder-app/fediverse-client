@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/post/post.dart';
-import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/post/post.dart';
+import 'package:fediverse_client/src/client/post/post_helper.dart';
 
 /// This class defines a series of actions that can be performed on a given community.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -35,7 +35,7 @@ import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
 /// ```
 class Community {
   /// The client instance.
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   /// The community id.
   int? id;
@@ -53,7 +53,7 @@ class Community {
   /// If [id] or [name] is provided, the community information will be fetched from the API.
   ///
   /// If [community] is provided, the community information will be used instead of fetching it from the API.
-  static Future<Community> initialize(LemmyClient client, {int? id, String? name, Map<String, dynamic>? community}) async {
+  static Future<Community> initialize(FediverseClient client, {int? id, String? name, Map<String, dynamic>? community}) async {
     final instance = Community._(client);
 
     // If the community information is pre-fetched, use it.

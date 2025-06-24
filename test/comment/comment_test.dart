@@ -1,20 +1,20 @@
 import 'package:test/test.dart';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment.dart';
-import 'package:lemmy_dart_client/src/client/comment/comment_helper.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/comment/comment.dart';
+import 'package:fediverse_client/src/client/comment/comment_helper.dart';
 
-import '../config.dart';
+import '../config.lemmy.dart';
 import '../utils.dart';
 
 void main() {
   group('Comment tests', () {
-    late LemmyClient client;
+    late FediverseClient client;
 
     int? commentId;
 
     setUp(() async {
-      client = await LemmyClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
+      client = await FediverseClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
 
       await client.account.login(username: username, password: password);
 

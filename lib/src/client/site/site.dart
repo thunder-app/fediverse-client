@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/client.dart';
 
 /// This class defines a series of actions that can be performed on a given site.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -16,7 +16,7 @@ import 'package:lemmy_dart_client/src/client/client.dart';
 /// ```
 class Site {
   /// The client instance.
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   /// The instance.
   final String instance;

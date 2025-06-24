@@ -1,20 +1,20 @@
-import 'package:lemmy_dart_client/src/client/post/post.dart';
-import 'package:lemmy_dart_client/src/client/post/post_helper.dart';
+import 'package:fediverse_client/src/client/post/post.dart';
+import 'package:fediverse_client/src/client/post/post_helper.dart';
 import 'package:test/test.dart';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/community/community.dart';
-import 'package:lemmy_dart_client/src/client/community/community_helper.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/community/community.dart';
+import 'package:fediverse_client/src/client/community/community_helper.dart';
 
-import '../config.dart';
+import '../config.lemmy.dart';
 import '../utils.dart';
 
 void main() {
   group('Community Helper tests', () {
-    late LemmyClient client;
+    late FediverseClient client;
 
     setUp(() async {
-      client = await LemmyClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
+      client = await FediverseClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
       await client.account.login(username: username, password: password);
     });
 
@@ -56,13 +56,13 @@ void main() {
   });
 
   group('Community tests', () {
-    late LemmyClient client;
+    late FediverseClient client;
 
     /// The name of the test community to generate.
     String communityName = 'test_${generateRandomString(10)}';
 
     setUp(() async {
-      client = await LemmyClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
+      client = await FediverseClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
 
       // Login to the account
       await client.account.login(username: username, password: password);

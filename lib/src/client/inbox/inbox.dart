@@ -1,10 +1,10 @@
-import 'package:lemmy_dart_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/client.dart';
 
 /// This class defines a series of actions that can be performed on the current account's inbox.
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -13,7 +13,7 @@ import 'package:lemmy_dart_client/src/client/client.dart';
 /// ```
 class Inbox {
   /// The client instance.
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   /// Initializes a new inbox.
   Inbox(this._client);

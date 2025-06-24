@@ -1,24 +1,25 @@
-import 'package:lemmy_dart_client/src/client/post/post.dart';
 import 'package:test/test.dart';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/post/post.dart';
+import 'package:fediverse_client/src/enums/platform.dart';
 
-import '../config.dart';
+import '../config.piefed.dart';
 import '../utils.dart';
 
 void main() {
   group('Site tests', () {
-    late LemmyClient client;
+    late FediverseClient client;
 
     setUp(() async {
-      client = await LemmyClient.initialize(instance: instance, scheme: scheme, version: version, userAgent: userAgent);
-      await client.account.login(username: username, password: password);
+      client = await FediverseClient.initialize(platform: Platform.piefed, instance: instance, scheme: scheme, version: version, userAgent: userAgent);
+      // await client.account.login(username: username, password: password);
     });
 
     group('info() method', () {
       test('should return the site information', () async {
         final result = await client.site.info();
-        expect(result, contains('site_view'));
+        expect(result, contains('site'));
       });
     });
 

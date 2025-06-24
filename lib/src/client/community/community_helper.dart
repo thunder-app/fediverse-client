@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:lemmy_dart_client/src/client/client.dart';
-import 'package:lemmy_dart_client/src/client/community/community.dart';
+import 'package:fediverse_client/src/client/client.dart';
+import 'package:fediverse_client/src/client/community/community.dart';
 
 /// Result class for community list operations containing communities and pagination cursors.
 class CommunityListResult {
@@ -25,7 +25,7 @@ class CommunityListResult {
 ///
 /// Usage:
 /// ```dart
-/// final client = await LemmyClient.initialize({
+/// final client = await FediverseClient.initialize({
 ///   instance: 'lemmy.world',
 ///   scheme: 'https',
 /// });
@@ -40,7 +40,7 @@ class CommunityListResult {
 /// final community = await client.community.random();
 /// ```
 class CommunityHelper {
-  final LemmyClient _client;
+  final FediverseClient _client;
 
   CommunityHelper(this._client);
 
